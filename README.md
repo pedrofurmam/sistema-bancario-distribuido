@@ -8,6 +8,10 @@ Um projeto para a disciplina de Sistemas Distribuídos que define um protocolo d
 * Yan Jardim Leal
 * Gabriel Pereira Neves
 
+**Testers**
+* Thomas Valeranovicz de Oliveira
+* Rafael Adonis Menon
+
 ## 1. Pré-requisitos e Instalação
 
 Para a correta manipulação das mensagens JSON, o projeto utiliza a biblioteca  **Jackson** . Recomendamos utilizarem Maven, é necessário adicionar as seguintes dependências ao seu projeto Java:
