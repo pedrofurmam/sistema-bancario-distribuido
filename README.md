@@ -13,11 +13,24 @@ Um projeto para a disciplina de Sistemas Distribuídos que define um protocolo d
 Para a correta manipulação das mensagens JSON, o projeto utiliza a biblioteca  **Jackson** . Recomendamos utilizarem Maven, é necessário adicionar as seguintes dependências ao seu projeto Java:
 
 * **Jackson Databind:**
-  * [https://central.sonatype.com/artifact/com.fasterxml.jackson.core/jackson-databind/2.17.1](https://central.sonatype.com/artifact/com.fasterxml.jackson.core/jackson-databind)
+  * [https://central.sonatype.com/artifact/com.fasterxml.jackson.core/jackson-databind/2.17.1](https://www.google.com/search?q=https://central.sonatype.com/artifact/com.fasterxml.jackson.core/jackson-databind/2.17.1 "null")
 * **Jackson Core:**
   * [https://central.sonatype.com/artifact/com.fasterxml.jackson.core/jackson-core/2.17.1](https://central.sonatype.com/artifact/com.fasterxml.jackson.core/jackson-core/2.17.1 "null")
 * **Jackson Annotations:**
   * [https://central.sonatype.com/artifact/com.fasterxml.jackson.core/jackson-annotations/2.17.1](https://central.sonatype.com/artifact/com.fasterxml.jackson.core/jackson-annotations/2.17.1 "null")
+ 
+1.1 Instalar Jackson
+
+- Criar um projeto Gradle
+- No arquivo pom.xml, colar:
+
+`<dependencies>`    
+`  <dependency>`        
+`    <groupId>com.fasterxml.jackson.core</groupId>`        
+`    <artifactId>jackson-databind</artifactId>`        
+`    <version>2.17.1</version>`    
+`  </dependency>`       
+`</dependencies>`
 
 ## 2. Como Utilizar o Validador
 
