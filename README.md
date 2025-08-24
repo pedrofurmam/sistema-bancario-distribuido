@@ -21,7 +21,7 @@ Para a correta manipulação das mensagens JSON, o projeto utiliza a biblioteca 
  
 1.1 Instalar Jackson
 
-- Criar um projeto Gradle
+- Criar um projeto Maven
 - No arquivo pom.xml, colar:
 
 `<dependencies>`    
