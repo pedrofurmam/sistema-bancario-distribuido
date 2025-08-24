@@ -23,6 +23,8 @@ Para a correta manipulação das mensagens JSON, o projeto utiliza a biblioteca 
 1.2 Guia com as dependências (Caso não saiba instalar sozinho)
 - Baixar a ferramenta [Eclipse](https://eclipseide.org/)
 - Na aba de 'Criar um Projeto' selecione a opção 'Criar um projeto Maven'
+- Habilite o botão "Create a simple project" e clique em next
+- Preencha todas as informações requiridas (Ou peça para alguma IA caso não se sinta criativo(a))
 - Ao criar, você terá um arquivo pom.xml, colar dentro de < project > COLE AQUI < /project >:
   
 `<dependencies>`    
