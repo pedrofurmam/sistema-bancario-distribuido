@@ -31,6 +31,7 @@ Para a correta manipulação das mensagens JSON, o projeto utiliza a biblioteca 
 `    <version>2.19.2</version>`    
 `  </dependency>`       
 `</dependencies>`
+
 1.3 Possíveis Erros
 - Caso esteja instalando eclipse pela primeira vez, o erro "Downloading external resources is disabled. [DownloadResourceDisabled]" pode ocorrer, para consertar basta ir em Window->Preferences->Maven->Habilite os botões que dizem "donwload" e "uptadee"->Apply
 - Para instalar as dependencias de fato, você deve clicar com o botão direito em seu projeto->Maven->Update Project, isso instalará as dependências. 
