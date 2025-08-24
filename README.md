@@ -12,6 +12,7 @@ Um projeto para a disciplina de Sistemas Distribuídos que define um protocolo d
 
 Para a correta manipulação das mensagens JSON, o projeto utiliza a biblioteca  **Jackson** . Recomendamos utilizarem Maven, é necessário adicionar as seguintes dependências ao seu projeto Java:
 
+1.1 Links com as dependências (Caso saiba instalar sozinho)
 * **Jackson Databind:**
   * [https://central.sonatype.com/artifact/com.fasterxml.jackson.core/jackson-databind/2.17.1](https://www.google.com/search?q=https://central.sonatype.com/artifact/com.fasterxml.jackson.core/jackson-databind/2.17.1 "null")
 * **Jackson Core:**
@@ -19,11 +20,10 @@ Para a correta manipulação das mensagens JSON, o projeto utiliza a biblioteca 
 * **Jackson Annotations:**
   * [https://central.sonatype.com/artifact/com.fasterxml.jackson.core/jackson-annotations/2.17.1](https://central.sonatype.com/artifact/com.fasterxml.jackson.core/jackson-annotations/2.17.1 "null")
  
-1.1 Instalar Jackson
-
-- Criar um projeto Maven
-- No arquivo pom.xml, colar:
-
+1.2 Guia com as dependências (Caso não saiba instalar sozinho)
+- Baixar a ferramenta [Eclipse](https://eclipseide.org/)
+- Na aba de 'Criar um Projeto' selecione a opção 'Criar um projeto Maven'
+- Ao criar, você terá um arquivo pom.xml, colar dentro de <project> COLE AQUI </project>:
 `<dependencies>`    
 `  <dependency>`        
 `    <groupId>com.fasterxml.jackson.core</groupId>`        
@@ -31,6 +31,9 @@ Para a correta manipulação das mensagens JSON, o projeto utiliza a biblioteca 
 `    <version>2.19.2</version>`    
 `  </dependency>`       
 `</dependencies>`
+1.3 Possíveis Erros
+- Caso esteja instalando eclipse pela primeira vez, o erro "Downloading external resources is disabled. [DownloadResourceDisabled]" pode ocorrer, para consertar basta ir em Window->Preferences->Maven->Habilite os botões que dizem "donwload" e "uptadee"->Apply
+- Para instalar as dependencias de fato, você deve clicar com o botão direito em seu projeto->Maven->Update Project, isso instalará as dependências. 
 
 ## 2. Como Utilizar o Validador
 
