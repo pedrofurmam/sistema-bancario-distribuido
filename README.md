@@ -336,4 +336,6 @@ A seguir, a especificação detalhada para cada operação.
 | ---------------------------- | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `id`,`pagina`,`limite` | **`int`**      | Valores numéricos inteiros.                                                                                                                                                                            |
 | `valor_enviado`,`saldo`  | **`double`**   | Valores numéricos de ponto flutuante.*Nota: Para este projeto,`double`é aceitável. Em sistemas de produção, o ideal seria usar `long`para representar centavos e evitar erros de precisão.* |
+| `cpf`  | **`String: 000.000.000-00`**   | O Validador apenas valida se o CPF está na formatação, não se é válido. |
+| `nome`,`senha`  | **`String: Mínimo 6 caracteres`**   | O Validador apenas valida o tamanho. |
 | Todos os outros campos       | **`String`**   | Valores de texto.                                                                                                                                                                                       |
