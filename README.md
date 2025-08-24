@@ -10,7 +10,7 @@ Um projeto para a disciplina de Sistemas Distribuídos que define um protocolo d
 
 ## 1. Pré-requisitos e Instalação
 
-Para a correta manipulação das mensagens JSON, o projeto utiliza a biblioteca  **Jackson** . É necessário adicionar as seguintes dependências ao seu projeto Java, recomendamos utilizarem MAVEN:
+Para a correta manipulação das mensagens JSON, o projeto utiliza a biblioteca  **Jackson** . Recomendamos utilizarem Maven, é necessário adicionar as seguintes dependências ao seu projeto Java:
 
 * **Jackson Databind:**
   * [https://central.sonatype.com/artifact/com.fasterxml.jackson.core/jackson-databind/2.17.1](https://www.google.com/search?q=https://central.sonatype.com/artifact/com.fasterxml.jackson.core/jackson-databind/2.17.1 "null")
