@@ -24,6 +24,7 @@ Para a correta manipulação das mensagens JSON, o projeto utiliza a biblioteca 
 - Baixar a ferramenta [Eclipse](https://eclipseide.org/)
 - Na aba de 'Criar um Projeto' selecione a opção 'Criar um projeto Maven'
 - Ao criar, você terá um arquivo pom.xml, colar dentro de < project > COLE AQUI < /project >:
+  
 `<dependencies>`    
 `  <dependency>`        
 `    <groupId>com.fasterxml.jackson.core</groupId>`        
