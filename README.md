@@ -24,8 +24,9 @@ Para a correta manipulação das mensagens JSON, o projeto utiliza a biblioteca 
 O repositório fornece uma classe `Validator` para garantir que as mensagens trocadas entre cliente e servidor sigam o protocolo definido.
 
 1. Baixe o repositório do GitHub.
-2. Mova as classes `Validator.java` e `RulesEnum.java` para a pasta do seu projeto.
-3. Antes de enviar uma mensagem (ou após recebê-la), utilize os métodos estáticos da classe `Validator` para verificar sua integridade:
+2. Crie uma package chamada "validador".
+3. Mova as classes `Validator.java` e `RulesEnum.java` para a pasta recém criada.
+4. Antes de enviar uma mensagem (ou após recebê-la), utilize os métodos estáticos da classe `Validator` para verificar sua integridade:
 
 ```
 // Exemplo de uso
