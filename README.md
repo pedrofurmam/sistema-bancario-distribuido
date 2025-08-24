@@ -13,7 +13,7 @@ Um projeto para a disciplina de Sistemas Distribuídos que define um protocolo d
 Para a correta manipulação das mensagens JSON, o projeto utiliza a biblioteca  **Jackson** . Recomendamos utilizarem Maven, é necessário adicionar as seguintes dependências ao seu projeto Java:
 
 * **Jackson Databind:**
-  * [https://central.sonatype.com/artifact/com.fasterxml.jackson.core/jackson-databind/2.17.1](https://www.google.com/search?q=https://central.sonatype.com/artifact/com.fasterxml.jackson.core/jackson-databind/2.17.1 "null")
+  * [https://central.sonatype.com/artifact/com.fasterxml.jackson.core/jackson-databind/2.17.1](https://central.sonatype.com/artifact/com.fasterxml.jackson.core/jackson-databind)
 * **Jackson Core:**
   * [https://central.sonatype.com/artifact/com.fasterxml.jackson.core/jackson-core/2.17.1](https://central.sonatype.com/artifact/com.fasterxml.jackson.core/jackson-core/2.17.1 "null")
 * **Jackson Annotations:**
