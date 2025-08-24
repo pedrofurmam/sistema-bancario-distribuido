@@ -28,7 +28,7 @@ Para a correta manipulação das mensagens JSON, o projeto utiliza a biblioteca 
 `  <dependency>`        
 `    <groupId>com.fasterxml.jackson.core</groupId>`        
 `    <artifactId>jackson-databind</artifactId>`        
-`    <version>2.17.1</version>`    
+`    <version>2.19.2</version>`    
 `  </dependency>`       
 `</dependencies>`
 
