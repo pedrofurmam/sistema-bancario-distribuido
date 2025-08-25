@@ -118,7 +118,7 @@ A seguir, a especificação detalhada para cada operação.
 ```
 {
   "operacao": "usuario_login",
-  "cpf": "12345678900",
+  "cpf": "123.456.789-00",
   "senha": "senhaSegura123"
 }
 
@@ -167,7 +167,7 @@ A seguir, a especificação detalhada para cada operação.
 {
   "operacao": "usuario_criar",
   "nome": "Gabriel Pereira Neves",
-  "cpf": "12345678900",
+  "cpf": "123.456.789-00",
   "senha": "senhaSegura123"
 }
 
@@ -204,7 +204,7 @@ A seguir, a especificação detalhada para cada operação.
   "status": true,
   "info": "Dados do usuário recuperados com sucesso.",
   "usuario": {
-    "cpf": "12345678900",
+    "cpf": "123.456.789-00",
     "saldo": 5430.21,
     "nome": "Gabriel Pereira Neves"
   }
@@ -273,7 +273,7 @@ A seguir, a especificação detalhada para cada operação.
   "operacao": "transacao_criar",
   "token": "a1b2c3d4-e5f6-7890-g1h2-i3j4k5l6m7n8",
   "valor": 150.75,
-  "cpf": "09876543211"
+  "cpf": "098.765.432-11"
 }
 
 ```
@@ -318,11 +318,11 @@ A seguir, a especificação detalhada para cada operação.
       "valor_enviado": 150.75,
       "usuario_enviador": {
         "nome": "Gabriel Pereira Neves",
-        "cpf": "12345678900"
+        "cpf": "123.456.789-00"
       },
       "usuario_recebedor": {
         "nome": "Yan Jardim Leal",
-        "cpf": "09876543211"
+        "cpf": "098.765.432-11"
       }
     }
   ]
