@@ -22,9 +22,7 @@ public class Validator {
 
         // Valida a presença e o tipo do campo 'operacao'
         JsonNode operacaoNode = getRequiredField(rootNode, "operacao");
-        if (!operacaoNode.isTextual()) {
-            throw new IllegalArgumentException("O campo 'operacao' deve ser uma String.");
-        }
+        validateStringLength(rootNode, "operacao", 3, 200); // Operacao também é uma string
 
         // Converte a string da operação para o nosso Enum
         RulesEnum operacao = RulesEnum.getEnum(operacaoNode.asText());
@@ -71,16 +69,14 @@ public class Validator {
 
         // Toda resposta do servidor deve ter 'operacao', 'status' e 'info'
         JsonNode operacaoNode = getRequiredField(rootNode, "operacao");
-        if (!operacaoNode.isTextual()) {
-            throw new IllegalArgumentException("O campo 'operacao' na resposta do servidor deve ser uma String.");
-        }
+        validateStringLength(rootNode, "operacao", 3, 200);
         
         JsonNode statusNode = getRequiredField(rootNode, "status");
         if (!statusNode.isBoolean()) {
             throw new IllegalArgumentException("O campo 'status' na resposta do servidor deve ser um booleano (true/false).");
         }
 
-        getRequiredField(rootNode, "info"); // Apenas verifica a presença
+        validateStringLength(rootNode, "info", 3, 200);
 
         RulesEnum operacao = RulesEnum.getEnum(operacaoNode.asText());
 
@@ -109,51 +105,50 @@ public class Validator {
 
     private static void validateUsuarioLoginClient(JsonNode node) {
         validateCpfFormat(node, "cpf");
-        validateStringMinLength(node, "senha", 6);
+        validateStringLength(node, "senha", 6, 120);
     }
 
     private static void validateUsuarioLogoutClient(JsonNode node) {
-        checkRequiredString(node, "token");
+        validateStringLength(node, "token", 3, 200);
     }
 
     private static void validateUsuarioCriarClient(JsonNode node) {
-        validateStringMinLength(node, "nome", 6);
+        validateStringLength(node, "nome", 6, 120);
         validateCpfFormat(node, "cpf");
-        validateStringMinLength(node, "senha", 6);
+        validateStringLength(node, "senha", 6, 120);
     }
 
     private static void validateUsuarioLerClient(JsonNode node) {
-        checkRequiredString(node, "token");
+        validateStringLength(node, "token", 3, 200);
     }
 
     private static void validateUsuarioAtualizarClient(JsonNode node) {
-        checkRequiredString(node, "token");
+        validateStringLength(node, "token", 3, 200);
         JsonNode usuarioNode = getRequiredObject(node, "usuario");
         
         if (!usuarioNode.has("nome") && !usuarioNode.has("senha")) {
             throw new IllegalArgumentException("O objeto 'usuario' para atualização deve conter pelo menos o campo 'nome' ou 'senha'.");
         }
-        // Valida os campos apenas se eles existirem na requisição
         if (usuarioNode.has("nome")){
-            validateStringMinLength(usuarioNode, "nome", 6);
+            validateStringLength(usuarioNode, "nome", 6, 120);
         }
         if (usuarioNode.has("senha")){
-            validateStringMinLength(usuarioNode, "senha", 6);
+            validateStringLength(usuarioNode, "senha", 6, 120);
         }
     }
 
     private static void validateUsuarioDeletarClient(JsonNode node) {
-        checkRequiredString(node, "token");
+        validateStringLength(node, "token", 3, 200);
     }
 
     private static void validateTransacaoCriarClient(JsonNode node) {
-        checkRequiredString(node, "token");
+        validateStringLength(node, "token", 3, 200);
         validateCpfFormat(node, "cpf");
         getRequiredNumber(node, "valor");
     }
 
     private static void validateTransacaoLerClient(JsonNode node) {
-        checkRequiredString(node, "token");
+        validateStringLength(node, "token", 3, 200);
         getRequiredInt(node, "pagina");
         getRequiredInt(node, "limite");
     }
@@ -163,13 +158,13 @@ public class Validator {
     // ===================================================================================
 
     private static void validateUsuarioLoginServer(JsonNode node) {
-        checkRequiredString(node, "token");
+        validateStringLength(node, "token", 3, 200);
     }
 
     private static void validateUsuarioLerServer(JsonNode node) {
         JsonNode usuarioNode = getRequiredObject(node, "usuario");
         validateCpfFormat(usuarioNode, "cpf");
-        validateStringMinLength(usuarioNode, "nome", 6);
+        validateStringLength(usuarioNode, "nome", 6, 120);
         getRequiredNumber(usuarioNode, "saldo");
         if (usuarioNode.has("senha")) {
             throw new IllegalArgumentException("A resposta do servidor para 'usuario_ler' não deve conter o campo 'senha'.");
@@ -182,10 +177,10 @@ public class Validator {
             getRequiredInt(transacao, "id");
             getRequiredNumber(transacao, "valor_enviado");
             JsonNode enviadorNode = getRequiredObject(transacao, "usuario_enviador");
-            validateStringMinLength(enviadorNode, "nome", 6);
+            validateStringLength(enviadorNode, "nome", 6, 120);
             validateCpfFormat(enviadorNode, "cpf");
             JsonNode recebedorNode = getRequiredObject(transacao, "usuario_recebedor");
-            validateStringMinLength(recebedorNode, "nome", 6);
+            validateStringLength(recebedorNode, "nome", 6, 120);
             validateCpfFormat(recebedorNode, "cpf");
         }
     }
@@ -195,6 +190,9 @@ public class Validator {
     // ===================================================================================
 
     private static JsonNode parseJson(String jsonString) throws Exception {
+        if (jsonString == null || jsonString.trim().isEmpty()) {
+            throw new Exception("A mensagem JSON não pode ser nula ou vazia.");
+        }
         try {
             return mapper.readTree(jsonString);
         } catch (Exception e) {
@@ -209,21 +207,19 @@ public class Validator {
         throw new IllegalArgumentException("O campo obrigatório '" + fieldName + "' não foi encontrado ou é nulo.");
     }
 
-    private static void checkRequiredString(JsonNode parentNode, String fieldName) {
+    private static void validateStringLength(JsonNode parentNode, String fieldName, int minLength, int maxLength) {
         JsonNode field = getRequiredField(parentNode, fieldName);
         if (!field.isTextual()) {
             throw new IllegalArgumentException("O campo '" + fieldName + "' deve ser do tipo String.");
         }
-    }
-
-    private static void validateStringMinLength(JsonNode parentNode, String fieldName, int minLength) {
-        JsonNode field = getRequiredField(parentNode, fieldName);
-        if (!field.isTextual()) {
-            throw new IllegalArgumentException("O campo '" + fieldName + "' deve ser do tipo String.");
+        
+        String value = field.asText().trim();
+        
+        if (value.length() < minLength) {
+            throw new IllegalArgumentException("O campo '" + fieldName + "' deve ter no mínimo " + minLength + " caracteres.");
         }
-        // .trim() remove espaços em branco no começo e no fim da String
-        if (field.asText().trim().length() < minLength) {
-            throw new IllegalArgumentException("O campo '" + fieldName + "' deve ter no mínimo " + minLength + " caracteres (desconsiderando espaços no início).");
+        if (value.length() > maxLength) {
+            throw new IllegalArgumentException("O campo '" + fieldName + "' deve ter no máximo " + maxLength + " caracteres.");
         }
     }
 
@@ -233,7 +229,6 @@ public class Validator {
             throw new IllegalArgumentException("O campo '" + fieldName + "' deve ser do tipo String.");
         }
         String cpf = field.asText();
-        // Expressão Regular que valida o formato 000.000.000-00
         String cpfRegex = "\\d{3}\\.\\d{3}\\.\\d{3}-\\d{2}";
         if (!cpf.matches(cpfRegex)) {
             throw new IllegalArgumentException("O campo '" + fieldName + "' deve estar no formato '000.000.000-00'.");
