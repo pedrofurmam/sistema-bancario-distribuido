@@ -331,7 +331,20 @@ A seguir, a especificação detalhada para cada operação.
 
 ```
 
-## 5. Tipagem de Dados
+## 5. Em caso de erro
+
+O servidor deverá retornar uma mensagem com `status` como `false` e `info` informando o motivo de erro, mais nenhuma informação deve ser enviada adiante.
+
+```
+{
+  "operacao": "operacaoXYZ",
+  "status": false,
+  "info": "Texto de erro."
+}
+
+```
+
+## 6. Tipagem de Dados
 
 | **Campo(s)**           | **Tipo de Dado** | **Descrição**                                                                                                                                                                                   |
 | ---------------------------- | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
