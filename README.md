@@ -333,7 +333,7 @@ A seguir, a especificação detalhada para cada operação.
 
 ## 5. Em caso de erro
 
-O servidor deverá retornar uma mensagem com `status` como `false` e `info` informando o motivo de erro, mais nenhuma informação deve ser enviada adiante.
+O servidor deverá retornar uma mensagem com `operacao`, `status` e `info`, mais nenhuma informação deve ser enviada adiante.
 
 ```
 {
