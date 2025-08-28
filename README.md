@@ -79,7 +79,7 @@ O sistema opera com três entidades principais:
 
 ### 3.2. Padrão do Campo `operacao`
 
-Toda mensagem trocada deve conter um campo `operacao`, que define a ação a ser executada.
+Toda mensagem trocada deve conter um campo `operacao`. Em envios de mensagem ao servidor, a operação se refere à ação que será realizada pelo servidor. Em recebimentos de mensagem pelo cliente, a operação se refere à ação que seria (em mensagens erro) ou que foi (em mensagens de sucesso) realizada pelo servidor.
 
 **Valores possíveis para `operacao`:**
 
@@ -267,6 +267,8 @@ A seguir, a especificação detalhada para cada operação.
 
 ### 4.7. Criação de Transação (`transacao_criar`)
 
+Na operação 'transacao_criar', é enviada a quantidade especificada na propriedade 'valor' do usuário contido no token ao usuário correspondente ao 'cpf_destino'.
+
 #### Envio (Cliente → Servidor)
 
 ```
@@ -274,7 +276,7 @@ A seguir, a especificação detalhada para cada operação.
   "operacao": "transacao_criar",
   "token": "a1b2c3d4-e5f6-7890-g1h2-i3j4k5l6m7n8",
   "valor": 150.75,
-  "cpf": "098.765.432-11"
+  "cpf_destino": "098.765.432-11"
 }
 
 ```
@@ -350,6 +352,6 @@ O servidor deverá retornar uma mensagem com `operacao`, `status` e `info`, mais
 | ---------------------------- | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `id`,`pagina`,`limite` | **`int`**      | Valores numéricos inteiros.                                                                                                                                                                            |
 | `valor_enviado`,`saldo`  | **`double`**   | Valores numéricos de ponto flutuante.*Nota: Para este projeto,`double`é aceitável. Em sistemas de produção, o ideal seria usar `long`para representar centavos e evitar erros de precisão.* |
-| `cpf`  | **`String: 000.000.000-00`**   | O Validador apenas valida se o CPF está na formatação, não se é válido. |
-| `nome`,`senha`  | **`String: Min 6 e Max 120 caracteres`**   | O Validador apenas valida o tamanho, ele desconsidera espaços no começo. |
-| Todos os outros campos       | **`String: Min 3 e Max 200`**   | Valores de texto.                                                                                                                                                                                       |
+| `cpf`  | **`String: 000.000.000-00`**   | O Validador apenas valida se o CPF está na formatação, não se é válido (espaçamentos no começo e no final são desconsiderados). |
+| `nome`,`senha`  | **`String: Min 6 e Max 120 caracteres`**   | O Validador apenas valida o tamanho, ele desconsidera espaços no começo e no fim. |
+| Todos os outros campos       | **`String: Min 3 e Max 200`**   | Valores de texto (espaçamentos no começo e no final são desconsiderados).                                                                                                                                                                                       |
