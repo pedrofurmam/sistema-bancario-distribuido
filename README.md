@@ -294,7 +294,8 @@ Na operação 'transacao_criar', é enviada a quantidade especificada na proprie
 
 ### 4.8. Leitura de Transações (`transacao_ler`)
 
-*Nota: Esta operação utiliza **paginação** para lidar com grandes volumes de dados.*
+*Nota: Esta operação utiliza **filtragem por datas** para lidar com grandes volumes de dados.*
+- Envia-se uma data inicial e uma data final, assim, apenas as transações ocorridas no período determinado são devolvidas.
 
 #### Envio (Cliente → Servidor)
 
@@ -302,8 +303,8 @@ Na operação 'transacao_criar', é enviada a quantidade especificada na proprie
 {
   "operacao": "transacao_ler",
   "token": "a1b2c3d4-e5f6-7890-g1h2-i3j4k5l6m7n8",
-  "pagina": 1,
-  "limite": 20
+  "data_inicial": "2025-08-01T00:00:00Z",
+  "data_final": "2025-08-27T23:59:59Z"
 }
 
 ```
@@ -326,7 +327,9 @@ Na operação 'transacao_criar', é enviada a quantidade especificada na proprie
       "usuario_recebedor": {
         "nome": "Yan Jardim Leal",
         "cpf": "098.765.432-11"
-      }
+      },
+      criado_em: "2025-08-02T00:00:00Z",
+      atualizado_em: "2025-08-02T00:00:00Z"
     }
   ]
 }
@@ -354,4 +357,5 @@ O servidor deverá retornar uma mensagem com `operacao`, `status` e `info`, mais
 | `valor_enviado`,`saldo`  | **`double`**   | Valores numéricos de ponto flutuante.*Nota: Para este projeto,`double`é aceitável. Em sistemas de produção, o ideal seria usar `long`para representar centavos e evitar erros de precisão.* |
 | `cpf`, `cpf_destino` | **`String: 000.000.000-00`**   | O Validador apenas valida se o CPF está na formatação, não se é válido (espaçamentos no começo e no final são desconsiderados). |
 | `nome`,`senha`  | **`String: Min 6 e Max 120 caracteres`**   | O Validador apenas valida o tamanho, ele desconsidera espaços no começo e no fim. |
+| `data_inicial`,`data_final`  | **`String: Min 20 e Max 20 caracteres`**   | O Validador apenas valida o tamanho, ele desconsidera espaços no começo e no fim. |
 | Todos os outros campos       | **`String: Min 3 e Max 200`**   | Valores de texto (espaçamentos no começo e no final são desconsiderados).                                                                                                                                                                                       |
