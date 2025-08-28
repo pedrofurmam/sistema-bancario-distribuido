@@ -73,8 +73,8 @@ A função pode lançar uma exceção ou imprimir no console caso a mensagem est
 
 O sistema opera com três entidades principais:
 
-* **Usuário:** Os dados devem ser persistidos e respeitar as propriedades  **ACID** . Operações de CRUD completas são suportadas.
-* **Transação:** Os dados devem ser persistidos e respeitar as propriedades  **ACID** . Operações de CR (Criar e Ler) são suportadas.
+* **Usuário:** Os dados devem ser persistidos e respeitar às propriedades  **ACID** . Operações de CRUD completas são suportadas.
+* **Transação:** Os dados devem ser persistidos e respeitar às propriedades  **ACID** . Operações de CR (Criar e Ler) são suportadas.
 * **Sessão:** Os dados de sessão (tokens) podem ser mantidos em memória. Operações de CRD (Criar, Ler, Deletar) são suportadas.
 
 ### 3.2. Padrão do Campo `operacao`
@@ -95,6 +95,7 @@ Toda mensagem trocada deve conter um campo `operacao`. Em envios de mensagem ao 
 ### 3.3. Padrão de Resposta (`status` e `info`)
 
 Toda resposta do servidor deve conter os campos `status` (booleano) e `info` (string) para indicar o resultado da operação.
+Caso `status` retornado seja false, significa que ocorreu um erro ao processar a mensagem enviada. Caso seja true, a mensagem enviada foi processada com sucesso.
 
 ```
 {
@@ -125,7 +126,7 @@ A seguir, a especificação detalhada para cada operação.
 
 ```
 
-#### Recebimento (Servidor → Cliente)
+#### Recebimento (Servidor → Cliente) em caso de sucesso
 
 ```
 {
@@ -133,6 +134,17 @@ A seguir, a especificação detalhada para cada operação.
   "token": "a1b2c3d4-e5f6-7890-g1h2-i3j4k5l6m7n8",
   "status": true,
   "info": "Login bem-sucedido."
+}
+
+```
+
+#### Recebimento (Servidor → Cliente) em caso de falha
+
+```
+{
+  "operacao": "usuario_login",
+  "status": false,
+  "info": "Ocorreu um erro ao realizar login."
 }
 
 ```
@@ -149,13 +161,24 @@ A seguir, a especificação detalhada para cada operação.
 
 ```
 
-#### Recebimento (Servidor → Cliente)
+#### Recebimento (Servidor → Cliente) em caso de sucesso
 
 ```
 {
   "operacao": "usuario_logout",
   "status": true,
   "info": "Logout realizado com sucesso."
+}
+
+```
+
+#### Recebimento (Servidor → Cliente) em caso de falha
+
+```
+{
+  "operacao": "usuario_logout",
+  "status": false,
+  "info": "Ocorreu um erro ao realizar logout."
 }
 
 ```
@@ -174,13 +197,24 @@ A seguir, a especificação detalhada para cada operação.
 
 ```
 
-#### Recebimento (Servidor → Cliente)
+#### Recebimento (Servidor → Cliente) em caso de sucesso
 
 ```
 {
   "operacao": "usuario_criar",
   "status": true,
   "info": "Usuário criado com sucesso."
+}
+
+```
+
+#### Recebimento (Servidor → Cliente) em caso de falha
+
+```
+{
+  "operacao": "usuario_criar",
+  "status": false,
+  "info": "Ocorreu um erro ao criar usuário."
 }
 
 ```
@@ -197,7 +231,7 @@ A seguir, a especificação detalhada para cada operação.
 
 ```
 
-#### Recebimento (Servidor → Cliente)
+#### Recebimento (Servidor → Cliente) em caso de sucesso
 
 ```
 {
@@ -209,6 +243,17 @@ A seguir, a especificação detalhada para cada operação.
     "saldo": 5430.21,
     "nome": "Gabriel Pereira Neves"
   }
+}
+
+```
+
+#### Recebimento (Servidor → Cliente) em caso de falha
+
+```
+{
+  "operacao": "usuario_ler",
+  "status": false,
+  "info": "Erro ao ler dados do usuário.",
 }
 
 ```
@@ -231,13 +276,24 @@ A seguir, a especificação detalhada para cada operação.
 
 ```
 
-#### Recebimento (Servidor → Cliente)
+#### Recebimento (Servidor → Cliente) em caso de sucesso
 
 ```
 {
   "operacao": "usuario_atualizar",
   "status": true,
   "info": "Usuário atualizado com sucesso."
+}
+
+```
+
+#### Recebimento (Servidor → Cliente) em caso de falha
+
+```
+{
+  "operacao": "usuario_atualizar",
+  "status": false,
+  "info": "Erro ao atualizar usuário."
 }
 
 ```
@@ -254,7 +310,7 @@ A seguir, a especificação detalhada para cada operação.
 
 ```
 
-#### Recebimento (Servidor → Cliente)
+#### Recebimento (Servidor → Cliente) em caso de sucesso
 
 ```
 {
@@ -265,9 +321,25 @@ A seguir, a especificação detalhada para cada operação.
 
 ```
 
+#### Recebimento (Servidor → Cliente) em caso de falha
+
+```
+{
+  "operacao": "usuario_deletar",
+  "status": false,
+  "info": "Erro ao deletar usuário."
+}
+
+```
+
 ### 4.7. Criação de Transação (`transacao_criar`)
 
-Na operação 'transacao_criar', é enviada a quantidade especificada na propriedade 'valor' do usuário contido no token ao usuário correspondente ao 'cpf_destino'.
+OBS: Na operação 'transacao_criar', é enviada a quantidade especificada na propriedade 'valor' pelo usuário contido no token ao usuário correspondente ao 'cpf_destino'.
+Exemplo:
+Pedro fez login no sistema, e cria uma transação para enviar R$10,00 a João
+O "token" a ser armazenado será o token de Pedro
+O "valor" a ser armazenado será 1000
+O "cpf_destino" a ser armazenado será o de João
 
 #### Envio (Cliente → Servidor)
 
@@ -281,7 +353,7 @@ Na operação 'transacao_criar', é enviada a quantidade especificada na proprie
 
 ```
 
-#### Recebimento (Servidor → Cliente)
+#### Recebimento (Servidor → Cliente) em caso de sucesso
 
 ```
 {
@@ -292,10 +364,22 @@ Na operação 'transacao_criar', é enviada a quantidade especificada na proprie
 
 ```
 
+#### Recebimento (Servidor → Cliente) em caso de falha
+
+```
+{
+  "operacao": "transacao_criar",
+  "status": false,
+  "info": "Erro ao criar transação."
+}
+
+```
+
 ### 4.8. Leitura de Transações (`transacao_ler`)
 
 *Nota: Esta operação utiliza **filtragem por datas** para lidar com grandes volumes de dados.*
-- Envia-se uma data inicial e uma data final, assim, apenas as transações ocorridas no período determinado são devolvidas.
+- Envia-se uma data inicial e uma data final. Assim, apenas as transações ocorridas no período determinado são devolvidas.
+- O token a ser enviado deve ser do usuário logado no sistema.
 
 #### Envio (Cliente → Servidor)
 
@@ -309,7 +393,7 @@ Na operação 'transacao_criar', é enviada a quantidade especificada na proprie
 
 ```
 
-#### Recebimento (Servidor → Cliente)
+#### Recebimento (Servidor → Cliente) em caso de sucesso
 
 ```
 {
@@ -332,6 +416,17 @@ Na operação 'transacao_criar', é enviada a quantidade especificada na proprie
       atualizado_em: "2025-08-02T00:00:00Z"
     }
   ]
+}
+
+```
+
+#### Recebimento (Servidor → Cliente) em caso de falha
+
+```
+{
+  "operacao": "transacao_ler",
+  "status": false,
+  "info": "Erro ao ler transações."
 }
 
 ```
