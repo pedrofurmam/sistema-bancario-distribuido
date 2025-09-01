@@ -471,7 +471,7 @@ ou até mesmo não retorne nada, mesmo que seus dados enviados estejam corretos,
 
 - É esperado que o aluno tenha lido todo o documento, erros claramente contra o protocolo serão de inteira responsabilidade do aluno.
 
-- É esperado do aluno, que caso encontrade uma vulnerabilidade ou ponto importante no protocolo, ele imediatamente avise no grupo de Whatsapp da turma ou em sala.
+- É esperado do aluno, que caso encontre uma vulnerabilidade ou ponto importante no protocolo, ele imediatamente avise no grupo de Whatsapp da turma ou em sala.
 
 ### 7.2. Pontos subentendidos.
 Há algumas informações que estão subentendidas sobre o projeto, o protocolo não visa em conta as regras de negócio,<br>
