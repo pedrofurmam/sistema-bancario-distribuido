@@ -383,7 +383,7 @@ O "cpf_destino" a ser armazenado será o de João
 - O token a ser enviado deve ser do usuário logado no sistema.
 
 O servidor deve ter como limite máximo de retorno 31 dias (31 dias foi escolhido pois consegue acolher todos os meses), exemplo:<br>
-O Usuário pediu as transações do dia 1 de janeiro a 1 de fevereiro, o servidor deve obrigatóriamente retornar todas as transações entre esse tempo<br>
+O Usuário pediu as transações do dia 1 de janeiro a 1 de fevereiro, é esperado que o servidor retorne todas as transações entre esse tempo<br>
 O Usuário pediu as transações do dia 1 de janeiro a 1 de maio, o servidor deve retornar um erro.
 
 #### Envio (Cliente → Servidor)
@@ -463,9 +463,14 @@ O que isso significa? Quando o cliente receber uma operação com o `status` com
 | `data_inicial`,`data_final`| **`String: yyyy-MM-dd'T'HH:mm:ss'Z'`** | Datas devem estar no formato ISO 8601 UTC. |
 | Todos os outros campos     | **`String: Min 3 e Max 200`** | Valores de texto (espaçamentos no começo e no final são desconsiderados).                   |
 
-## 7. Explicações adicionais
+## 7. Explicações adicionais e avisos
 
-### ISO 8601
+### 7.1. Esperado de cada aluno.
+**Esperado:**<br>
+É esperado que o servidor retorne os dados corretamente, porém o cliente sempre deve se previnir para caso o servidor retorne um `status` como `false`,<br>
+ou até mesmo não retorne nada, mesmo que seus dados enviados estejam corretos, prever erros ou falta de respostas é de inteira responsabilidade do aluno.
+
+### 7.2. ISO 8601
 **Explicação:**<br>
 Apenas será necessário transformar em String, e ler a String com funções já nativas do Java (Date)
 
