@@ -458,8 +458,7 @@ O servidor deverá retornar uma mensagem com `operacao`, `status` e `info`, mais
 ## 7. Explicações adicionais
 
 ### ISO 8601
-**Explicação:**
-
+**Explicação:**<br>
 Apenas será necessário transformar em String, e ler a String com funções já nativas do Java (Date)
 
 `yyyy`: ano com 4 dígitos<br>
