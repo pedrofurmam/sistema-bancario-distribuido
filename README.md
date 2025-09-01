@@ -260,7 +260,8 @@ A seguir, a especificação detalhada para cada operação.
 
 ### 4.5. Atualização de Dados do Usuário (`usuario_atualizar`)
 
-*Nota: Apenas os campos a serem alterados devem ser enviados. A omissão de um campo significa que ele não deve ser modificado.*
+*Nota: Apenas os campos a serem alterados devem ser enviados. A omissão de um campo significa que ele não deve ser modificado.*<br>
+É muito importante que criem um sistema robusto que valide todas as possibilidades.
 
 #### Envio (Cliente → Servidor)
 
@@ -377,9 +378,13 @@ O "cpf_destino" a ser armazenado será o de João
 
 ### 4.8. Leitura de Transações (`transacao_ler`)
 
-*Nota: Esta operação utiliza **filtragem por datas** para lidar com grandes volumes de dados.*
-- Envia-se uma data inicial e uma data final. Assim, apenas as transações ocorridas no período determinado são devolvidas.
+*Nota: Esta operação utiliza **filtragem por datas** para lidar com grandes volumes de dados.*<br>
+- Envia-se uma data inicial e uma data final. Assim, apenas as transações ocorridas no período determinado são devolvidas.<br>
 - O token a ser enviado deve ser do usuário logado no sistema.
+
+O servidor deve ter como limite máximo de retorno 31 dias (31 dias foi escolhido pois consegue acolher todos os meses), exemplo:<br>
+O Usuário pediu as transações do dia 1 de janeiro a 1 de fevereiro, o servidor deve obrigatóriamente retornar todas as transações entre esse tempo<br>
+O Usuário pediu as transações do dia 1 de janeiro a 1 de maio, o servidor deve retornar um erro.
 
 #### Envio (Cliente → Servidor)
 
@@ -433,7 +438,10 @@ O "cpf_destino" a ser armazenado será o de João
 
 ## 5. Em caso de erro
 
-O servidor deverá retornar uma mensagem com `operacao`, `status` e `info`, mais nenhuma informação deve ser enviada adiante.
+O servidor deverá retornar uma mensagem com `operacao`, `status` e `info`, mais nenhuma informação deve ser enviada adiante.<br>
+As possíveis mensagens de erro (`info`) serão responsabilidade do servidor, o cliente apenas deve passar essa mensagem para a interface do usuário e tratar o erro conforme a `operacao`.
+
+O que isso significa? Quando o cliente receber uma operação com o `status` como `false` ele deve tratar o erro pela operação (Caso precise) e mostrar a `info` para interface do usuário caso o cliente deseje.
 
 ```
 {
