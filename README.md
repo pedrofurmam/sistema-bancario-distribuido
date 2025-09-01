@@ -68,6 +68,7 @@ Validator.validateServer(jsonParaEnviar);
 A função pode lançar uma exceção ou imprimir no console caso a mensagem esteja fora dos padrões definidos.
 
 ## 3. Regras de Negócio e Padrões Gerais
+Essas são as regras de negócio do protocolo, não as do Sistema Bancário
 
 ### 3.1. Estrutura de Dados
 
@@ -474,7 +475,7 @@ ou até mesmo não retorne nada, mesmo que seus dados enviados estejam corretos,
 - É esperado do aluno, que caso encontre uma vulnerabilidade ou ponto importante no protocolo, ele imediatamente avise no grupo de Whatsapp da turma ou em sala.
 
 ### 7.2. Pontos subentendidos.
-Há algumas informações que estão subentendidas sobre o projeto, o protocolo não visa em conta as regras de negócio,<br>
+Há algumas informações que estão subentendidas sobre o projeto, o protocolo não visa em conta as regras de negócio do sistema bancário,<br>
 que por sua vez estão disponíveis [clicando aqui](https://docs.google.com/document/d/1MRiMjnu9PdJSWPyAKl4zBdkZN0iFwNujDLjRW_oP-IA/edit?tab=t.0)
 
 Todas possiblidades de conversas entre o `cliente->servidor` e `servidor->cliente` estão listadas aqui, para que sua mensagem esteja correta ela deve seguir o molde fornecido a **risca**, do contrário, estará contra o protocolo e suas orientações.
