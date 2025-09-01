@@ -475,7 +475,7 @@ ou até mesmo não retorne nada, mesmo que seus dados enviados estejam corretos,
 
 ### 7.2. Pontos subentendidos.
 Há algumas informações que estão subentendidas sobre o projeto, o protocolo não visa em conta as regras de negócio,<br>
-que por sua vez estão disponíveis [clicando aqui] (https://docs.google.com/document/d/1MRiMjnu9PdJSWPyAKl4zBdkZN0iFwNujDLjRW_oP-IA/edit?tab=t.0)
+que por sua vez estão disponíveis [clicando aqui](https://docs.google.com/document/d/1MRiMjnu9PdJSWPyAKl4zBdkZN0iFwNujDLjRW_oP-IA/edit?tab=t.0)
 
 Todas possiblidades de conversas entre o cliente->servidor servidor->cliente estão listadas aqui, para que sua mensagem esteja correta ela deve seguir o molde fornecido a **risca**, do contrário, estará contra o protocolo e suas orientações.
 
