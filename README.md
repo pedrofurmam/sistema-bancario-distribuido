@@ -466,9 +466,12 @@ O que isso significa? Quando o cliente receber uma operação com o `status` com
 ## 7. Explicações adicionais e avisos
 
 ### 7.1. Esperado de cada aluno.
-**Esperado:**<br>
-É esperado que o servidor retorne os dados corretamente, porém o cliente sempre deve se previnir para caso o servidor retorne um `status` como `false`,<br>
+- É esperado que o servidor retorne os dados corretamente, porém o cliente sempre deve se previnir para caso o servidor retorne um `status` como `false`,<br>
 ou até mesmo não retorne nada, mesmo que seus dados enviados estejam corretos, prever erros ou falta de respostas é de inteira responsabilidade do aluno.
+
+- É esperado que o aluno tenha lido todo o documento, erros claramente contra o protocolo serão de inteira responsabilidade do aluno.
+
+- É esperado do aluno, que caso ele encontrade uma vulnerabilidade ou ponto importante no protocolo, ele imediatamente avise no grupo de Whatsapp da turma ou em sala.
 
 ### 7.2. ISO 8601
 **Explicação:**<br>
