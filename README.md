@@ -338,10 +338,10 @@ A seguir, a especificação detalhada para cada operação.
 
 OBS: Na operação 'transacao_criar', é enviada a quantidade especificada na propriedade 'valor' pelo usuário contido no token, enviando ao usuário correspondente no 'cpf_destino'.
 Exemplo:<br>
-Pedro fez login no sistema, e cria uma transação para enviar R$10,00 a João<br>
-O "token" enviado será o token de Pedro, que será seu identificador<br>
-O "valor" a ser armazenado será R$10,00<br>
-O "cpf_destino" a ser armazenado será o de João<br>
+- Pedro fez login no sistema, e cria uma transação para enviar R$10,00 a João<br>
+- O "token" enviado será o token de Pedro, que será seu identificador<br>
+- O "valor" a ser armazenado será R$10,00<br>
+- O "cpf_destino" a ser armazenado será o de João<br>
 
 #### Envio (Cliente → Servidor)
 
