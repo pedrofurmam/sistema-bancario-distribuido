@@ -92,6 +92,7 @@ Toda mensagem trocada deve conter um campo `operacao`. Em envios de mensagem ao 
 * `usuario_deletar`
 * `transacao_criar`
 * `transacao_ler`
+* `depositar`
 
 ### 3.3. Padrão de Resposta (`status` e `info`)
 
