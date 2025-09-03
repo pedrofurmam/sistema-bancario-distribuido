@@ -108,7 +108,7 @@ Caso `status` retornado seja false, significa que ocorreu um erro ao processar a
 
 ### 3.4. Padrão do Token de Autenticação
 
-O token de sessão, gerado no login e utilizado para autenticar operações subsequentes, deve ser sempre tratado como uma  **String** .
+O token de sessão, gerado no login e utilizado para autenticar operações subsequentes, deve ser sempre tratado como uma  **String**.<br>
 
 ## 4. Protocolo da API: Objetos e Mensagens
 
@@ -433,6 +433,43 @@ O Usuário pediu as transações do dia 1 de janeiro a 1 de maio, o servidor dev
   "operacao": "transacao_ler",
   "status": false,
   "info": "Erro ao ler transações."
+}
+
+```
+
+### 4.9. Realizar depósito (`depositar`)
+Essa ação permite que o usuário deposite quantia X de dinheiro em sua conta,<br>
+O `valor_enviado` representa a quantidade que está sendo depositada.
+
+#### Envio (Cliente → Servidor)
+
+```
+{
+  "operacao": "depositar",
+  "token": "a1b2c3d4-e5f6-7890-g1h2-i3j4k5l6m7n8",
+  "valor_enviado": 123.12
+}
+
+```
+
+#### Recebimento (Servidor → Cliente) em caso de sucesso
+
+```
+{
+  "operacao": "depositar",
+  "status": true,
+  "info": "Deposito realizado com sucesso."
+}
+
+```
+
+#### Recebimento (Servidor → Cliente) em caso de falha
+
+```
+{
+  "operacao": "depositar",
+  "status": false,
+  "info": "Erro ao depositar."
 }
 
 ```
