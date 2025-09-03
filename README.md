@@ -68,6 +68,7 @@ Validator.validateServer(jsonParaEnviar);
 A função pode lançar uma exceção ou imprimir no console caso a mensagem esteja fora dos padrões definidos.
 
 ## 3. Regras de Negócio e Padrões Gerais
+Essas são as regras de negócio do protocolo, não as do Sistema Bancário
 
 ### 3.1. Estrutura de Dados
 
@@ -91,6 +92,7 @@ Toda mensagem trocada deve conter um campo `operacao`. Em envios de mensagem ao 
 * `usuario_deletar`
 * `transacao_criar`
 * `transacao_ler`
+* `depositar`
 
 ### 3.3. Padrão de Resposta (`status` e `info`)
 
@@ -107,7 +109,7 @@ Caso `status` retornado seja false, significa que ocorreu um erro ao processar a
 
 ### 3.4. Padrão do Token de Autenticação
 
-O token de sessão, gerado no login e utilizado para autenticar operações subsequentes, deve ser sempre tratado como uma  **String** .
+O token de sessão, gerado no login e utilizado para autenticar operações subsequentes, deve ser sempre tratado como uma  **String**.<br>
 
 ## 4. Protocolo da API: Objetos e Mensagens
 
@@ -335,12 +337,12 @@ A seguir, a especificação detalhada para cada operação.
 
 ### 4.7. Criação de Transação (`transacao_criar`)
 
-OBS: Na operação 'transacao_criar', é enviada a quantidade especificada na propriedade 'valor' pelo usuário contido no token ao usuário correspondente ao 'cpf_destino'.
-Exemplo:
-Pedro fez login no sistema, e cria uma transação para enviar R$10,00 a João
-O "token" a ser armazenado será o token de Pedro
-O "valor" a ser armazenado será 1000
-O "cpf_destino" a ser armazenado será o de João
+OBS: Na operação 'transacao_criar', é enviada a quantidade especificada na propriedade 'valor' pelo usuário contido no token, enviando ao usuário correspondente no 'cpf_destino'.
+Exemplo:<br>
+- Pedro fez login no sistema, e cria uma transação para enviar R$10,00 a João<br>
+- O "token" enviado será o token de Pedro, que será seu identificador<br>
+- O "valor" a ser armazenado será R$10,00<br>
+- O "cpf_destino" a ser armazenado será o de João<br>
 
 #### Envio (Cliente → Servidor)
 
@@ -436,6 +438,43 @@ O Usuário pediu as transações do dia 1 de janeiro a 1 de maio, o servidor dev
 
 ```
 
+### 4.9. Realizar depósito (`depositar`)
+Essa ação permite que o usuário deposite quantia X de dinheiro em sua conta,<br>
+O `valor_enviado` representa a quantidade que está sendo depositada.
+
+#### Envio (Cliente → Servidor)
+
+```
+{
+  "operacao": "depositar",
+  "token": "a1b2c3d4-e5f6-7890-g1h2-i3j4k5l6m7n8",
+  "valor_enviado": 123.12
+}
+
+```
+
+#### Recebimento (Servidor → Cliente) em caso de sucesso
+
+```
+{
+  "operacao": "depositar",
+  "status": true,
+  "info": "Deposito realizado com sucesso."
+}
+
+```
+
+#### Recebimento (Servidor → Cliente) em caso de falha
+
+```
+{
+  "operacao": "depositar",
+  "status": false,
+  "info": "Erro ao depositar."
+}
+
+```
+
 ## 5. Em caso de erro
 
 O servidor deverá retornar uma mensagem com `operacao`, `status` e `info`, mais nenhuma informação deve ser enviada adiante.<br>
@@ -474,7 +513,7 @@ ou até mesmo não retorne nada, mesmo que seus dados enviados estejam corretos,
 - É esperado do aluno, que caso encontre uma vulnerabilidade ou ponto importante no protocolo, ele imediatamente avise no grupo de Whatsapp da turma ou em sala.
 
 ### 7.2. Pontos subentendidos.
-Há algumas informações que estão subentendidas sobre o projeto, o protocolo não visa em conta as regras de negócio,<br>
+Há algumas informações que estão subentendidas sobre o projeto, o protocolo não visa em conta as regras de negócio do sistema bancário,<br>
 que por sua vez estão disponíveis [clicando aqui](https://docs.google.com/document/d/1MRiMjnu9PdJSWPyAKl4zBdkZN0iFwNujDLjRW_oP-IA/edit?tab=t.0)
 
 Todas possiblidades de conversas entre o `cliente->servidor` e `servidor->cliente` estão listadas aqui, para que sua mensagem esteja correta ela deve seguir o molde fornecido a **risca**, do contrário, estará contra o protocolo e suas orientações.
