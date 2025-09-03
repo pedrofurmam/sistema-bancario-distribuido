@@ -13,7 +13,8 @@ public enum RulesEnum {
     USUARIO_DELETAR("usuario_deletar"),
     // CR(UD) da transação
     TRANSACAO_CRIAR("transacao_criar"),
-    TRANSACAO_LER("transacao_ler"); // É literalmente o envio de um 'getTransacao()' para o servidor, porém os parâmetros influenciam
+    TRANSACAO_LER("transacao_ler"), // É literalmente o envio de um 'getTransacao()' para o servidor, porém os parâmetros influenciam
+    DEPOSITAR("depositar");
 
     RulesEnum(String rule) {
         this.rule = rule;
