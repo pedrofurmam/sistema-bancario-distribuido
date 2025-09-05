@@ -483,9 +483,6 @@ As possíveis mensagens de erro (`info`) serão responsabilidade do servidor, o 
 
 O que isso significa? Quando o cliente receber uma operação com o `status` como `false` ele deve tratar o erro pela operação (Caso precise) e mostrar a `info` para interface do usuário caso o cliente deseje.
 
-### 5.2. Erros de JSON
-Caso o servidor envie uma mensagem que não contenha `operacao`, `status` ou `info`, ou o cliente envie uma mensagem que não contenha `operacao`,<br>o servidor/cliente que recebe devem retornar `null` para encerrar a conexão.
-
 ```
 {
   "operacao": "operacaoXYZ",
@@ -494,6 +491,9 @@ Caso o servidor envie uma mensagem que não contenha `operacao`, `status` ou `in
 }
 
 ```
+
+### 5.2. Erros de JSON
+Caso o servidor envie uma mensagem que não contenha `operacao`, `status` ou `info`, ou o cliente envie uma mensagem que não contenha `operacao`,<br>o servidor/cliente que recebe devem retornar `null` para encerrar a conexão.
 
 ## 6. Tipagem de Dados
 
