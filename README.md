@@ -477,10 +477,14 @@ O `valor_enviado` representa a quantidade que está sendo depositada.
 
 ## 5. Em caso de erro
 
+### 5.1. Erros padrões
 O servidor deverá retornar uma mensagem com `operacao`, `status` e `info`, mais nenhuma informação deve ser enviada adiante.<br>
 As possíveis mensagens de erro (`info`) serão responsabilidade do servidor, o cliente apenas deve passar essa mensagem para a interface do usuário e tratar o erro conforme a `operacao`.
 
 O que isso significa? Quando o cliente receber uma operação com o `status` como `false` ele deve tratar o erro pela operação (Caso precise) e mostrar a `info` para interface do usuário caso o cliente deseje.
+
+### 5.2. Erros de JSON
+Caso o cliente ou o servidor enviem uma mensagem que não contenha `operacao`, `status` ou `info`, o servidor/cliente que recebe deve retornar `null` para encerrar a conexão.
 
 ```
 {
