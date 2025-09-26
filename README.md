@@ -117,7 +117,7 @@ A seguir, a especificação detalhada para cada operação.
 
 ### 4.1. Login de Usuário (`usuario_login`)
 
-#### Envio (Cliente → Servidor)
+#### Envio (cliente → servidor)
 
 ```
 {
@@ -128,7 +128,7 @@ A seguir, a especificação detalhada para cada operação.
 
 ```
 
-#### Recebimento (Servidor → Cliente) em caso de sucesso
+#### Recebimento (servidor → cliente) em caso de sucesso
 
 ```
 {
@@ -140,7 +140,7 @@ A seguir, a especificação detalhada para cada operação.
 
 ```
 
-#### Recebimento (Servidor → Cliente) em caso de falha
+#### Recebimento (servidor → cliente) em caso de falha
 
 ```
 {
@@ -153,7 +153,7 @@ A seguir, a especificação detalhada para cada operação.
 
 ### 4.2. Logout de Usuário (`usuario_logout`)
 
-#### Envio (Cliente → Servidor)
+#### Envio (cliente → servidor)
 
 ```
 {
@@ -163,7 +163,7 @@ A seguir, a especificação detalhada para cada operação.
 
 ```
 
-#### Recebimento (Servidor → Cliente) em caso de sucesso
+#### Recebimento (servidor → cliente) em caso de sucesso
 
 ```
 {
@@ -174,7 +174,7 @@ A seguir, a especificação detalhada para cada operação.
 
 ```
 
-#### Recebimento (Servidor → Cliente) em caso de falha
+#### Recebimento (servidor → cliente) em caso de falha
 
 ```
 {
@@ -187,7 +187,7 @@ A seguir, a especificação detalhada para cada operação.
 
 ### 4.3. Criação de Usuário (`usuario_criar`)
 
-#### Envio (Cliente → Servidor)
+#### Envio (cliente → servidor)
 
 ```
 {
@@ -199,7 +199,7 @@ A seguir, a especificação detalhada para cada operação.
 
 ```
 
-#### Recebimento (Servidor → Cliente) em caso de sucesso
+#### Recebimento (servidor → cliente) em caso de sucesso
 
 ```
 {
@@ -210,7 +210,7 @@ A seguir, a especificação detalhada para cada operação.
 
 ```
 
-#### Recebimento (Servidor → Cliente) em caso de falha
+#### Recebimento (servidor → cliente) em caso de falha
 
 ```
 {
@@ -223,7 +223,7 @@ A seguir, a especificação detalhada para cada operação.
 
 ### 4.4. Leitura de Dados do Usuário (`usuario_ler`)
 
-#### Envio (Cliente → Servidor)
+#### Envio (cliente → servidor)
 
 ```
 {
@@ -233,7 +233,7 @@ A seguir, a especificação detalhada para cada operação.
 
 ```
 
-#### Recebimento (Servidor → Cliente) em caso de sucesso
+#### Recebimento (servidor → cliente) em caso de sucesso
 
 ```
 {
@@ -249,7 +249,7 @@ A seguir, a especificação detalhada para cada operação.
 
 ```
 
-#### Recebimento (Servidor → Cliente) em caso de falha
+#### Recebimento (servidor → cliente) em caso de falha
 
 ```
 {
@@ -265,7 +265,7 @@ A seguir, a especificação detalhada para cada operação.
 *Nota: Apenas os campos a serem alterados devem ser enviados. A omissão de um campo significa que ele não deve ser modificado.*<br>
 É muito importante que criem um sistema robusto que valide todas as possibilidades.
 
-#### Envio (Cliente → Servidor)
+#### Envio (cliente → servidor)
 
 ```
 {
@@ -279,7 +279,7 @@ A seguir, a especificação detalhada para cada operação.
 
 ```
 
-#### Recebimento (Servidor → Cliente) em caso de sucesso
+#### Recebimento (servidor → cliente) em caso de sucesso
 
 ```
 {
@@ -290,7 +290,7 @@ A seguir, a especificação detalhada para cada operação.
 
 ```
 
-#### Recebimento (Servidor → Cliente) em caso de falha
+#### Recebimento (servidor → cliente) em caso de falha
 
 ```
 {
@@ -303,7 +303,7 @@ A seguir, a especificação detalhada para cada operação.
 
 ### 4.6. Deleção de Usuário (`usuario_deletar`)
 
-#### Envio (Cliente → Servidor)
+#### Envio (cliente → servidor)
 
 ```
 {
@@ -313,7 +313,7 @@ A seguir, a especificação detalhada para cada operação.
 
 ```
 
-#### Recebimento (Servidor → Cliente) em caso de sucesso
+#### Recebimento (servidor → cliente) em caso de sucesso
 
 ```
 {
@@ -324,7 +324,7 @@ A seguir, a especificação detalhada para cada operação.
 
 ```
 
-#### Recebimento (Servidor → Cliente) em caso de falha
+#### Recebimento (servidor → cliente) em caso de falha
 
 ```
 {
@@ -344,7 +344,7 @@ Exemplo:<br>
 - O "valor" a ser armazenado será R$10,00<br>
 - O "cpf_destino" a ser armazenado será o de João<br>
 
-#### Envio (Cliente → Servidor)
+#### Envio (cliente → servidor)
 
 ```
 {
@@ -356,7 +356,7 @@ Exemplo:<br>
 
 ```
 
-#### Recebimento (Servidor → Cliente) em caso de sucesso
+#### Recebimento (servidor → cliente) em caso de sucesso
 
 ```
 {
@@ -367,7 +367,7 @@ Exemplo:<br>
 
 ```
 
-#### Recebimento (Servidor → Cliente) em caso de falha
+#### Recebimento (servidor → cliente) em caso de falha
 
 ```
 {
@@ -388,7 +388,7 @@ O servidor deve ter como limite máximo de retorno 31 dias (31 dias foi escolhid
 O Usuário pediu as transações do dia 1 de janeiro a 1 de fevereiro, é esperado que o servidor retorne todas as transações entre esse tempo<br>
 O Usuário pediu as transações do dia 1 de janeiro a 1 de maio, o servidor deve retornar um erro.
 
-#### Envio (Cliente → Servidor)
+#### Envio (cliente → servidor)
 
 ```
 {
@@ -400,7 +400,7 @@ O Usuário pediu as transações do dia 1 de janeiro a 1 de maio, o servidor dev
 
 ```
 
-#### Recebimento (Servidor → Cliente) em caso de sucesso
+#### Recebimento (servidor → cliente) em caso de sucesso
 
 ```
 {
@@ -427,7 +427,7 @@ O Usuário pediu as transações do dia 1 de janeiro a 1 de maio, o servidor dev
 
 ```
 
-#### Recebimento (Servidor → Cliente) em caso de falha
+#### Recebimento (servidor → cliente) em caso de falha
 
 ```
 {
@@ -442,7 +442,7 @@ O Usuário pediu as transações do dia 1 de janeiro a 1 de maio, o servidor dev
 Essa ação permite que o usuário deposite quantia X de dinheiro em sua conta,<br>
 O `valor_enviado` representa a quantidade que está sendo depositada.
 
-#### Envio (Cliente → Servidor)
+#### Envio (cliente → servidor)
 
 ```
 {
@@ -453,7 +453,7 @@ O `valor_enviado` representa a quantidade que está sendo depositada.
 
 ```
 
-#### Recebimento (Servidor → Cliente) em caso de sucesso
+#### Recebimento (servidor → cliente) em caso de sucesso
 
 ```
 {
@@ -464,7 +464,7 @@ O `valor_enviado` representa a quantidade que está sendo depositada.
 
 ```
 
-#### Recebimento (Servidor → Cliente) em caso de falha
+#### Recebimento (servidor → cliente) em caso de falha
 
 ```
 {
