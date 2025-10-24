@@ -23,8 +23,20 @@ public class BancoDados {
                     "saldo REAL DEFAULT 0.00" +
                     ")";
 
+            String sqlTransacoes = "CREATE TABLE IF NOT EXISTS transacoes (" +
+                    "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                    "valor_enviado REAL NOT NULL, " +
+                    "cpf_enviador TEXT NOT NULL, " +
+                    "cpf_recebedor TEXT NOT NULL, " +
+                    "criado_em TEXT NOT NULL, " +
+                    "atualizado_em TEXT NOT NULL, " +
+                    "FOREIGN KEY(cpf_enviador) REFERENCES usuarios(cpf), " +
+                    "FOREIGN KEY(cpf_recebedor) REFERENCES usuarios(cpf)" +
+                    ")";
+
             stmt.execute(sqlUsuarios);
-            System.out.println("Tabela usuarios criada com sucesso!");
+            stmt.execute(sqlTransacoes);
+            System.out.println("Tabelas criadas com sucesso!");
 
         } catch (Exception e) {
             System.err.println("Erro ao criar tabela: " + e.getMessage());
