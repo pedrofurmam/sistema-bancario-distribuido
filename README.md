@@ -1,6 +1,10 @@
 
 # Protocolo de Mensagens - Sistema Bancário Simples
 
+Versão atual: 1.3
+
+Últimos tópicos atualizados: `4.6.` `7.3.`
+
 Um projeto para a disciplina de Sistemas Distribuídos que define um protocolo de comunicação baseado em JSON para as operações de um sistema bancário simplificado.
 
 **Criadores:**
@@ -18,19 +22,19 @@ Para a correta manipulação das mensagens JSON, o projeto utiliza a biblioteca 
 
 1.1 Links com as dependências (Caso saiba instalar sozinho)
 * **Jackson Databind:**
-  * [https://central.sonatype.com/artifact/com.fasterxml.jackson.core/jackson-databind/2.17.1](https://central.sonatype.com/artifact/com.fasterxml.jackson.core/jackson-databind)
+    * [https://central.sonatype.com/artifact/com.fasterxml.jackson.core/jackson-databind/2.17.1](https://central.sonatype.com/artifact/com.fasterxml.jackson.core/jackson-databind)
 * **Jackson Core:**
-  * [https://central.sonatype.com/artifact/com.fasterxml.jackson.core/jackson-core/2.17.1](https://central.sonatype.com/artifact/com.fasterxml.jackson.core/jackson-core/2.17.1 "null")
+    * [https://central.sonatype.com/artifact/com.fasterxml.jackson.core/jackson-core/2.17.1](https://central.sonatype.com/artifact/com.fasterxml.jackson.core/jackson-core/2.17.1 "null")
 * **Jackson Annotations:**
-  * [https://central.sonatype.com/artifact/com.fasterxml.jackson.core/jackson-annotations/2.17.1](https://central.sonatype.com/artifact/com.fasterxml.jackson.core/jackson-annotations/2.17.1 "null")
- 
+    * [https://central.sonatype.com/artifact/com.fasterxml.jackson.core/jackson-annotations/2.17.1](https://central.sonatype.com/artifact/com.fasterxml.jackson.core/jackson-annotations/2.17.1 "null")
+
 1.2 Guia com as dependências (Caso não saiba instalar sozinho)
 - Baixar a ferramenta [Eclipse](https://eclipseide.org/)
 - Na aba de 'Criar um Projeto' selecione a opção 'Criar um projeto Maven'
 - Habilite o botão "Create a simple project" e clique em next
 - Preencha todas as informações requiridas (Ou peça para alguma IA caso não se sinta criativo(a))
 - Ao criar, você terá um arquivo pom.xml, colar dentro de < project > COLE AQUI < /project >:
-  
+
 `<dependencies>`    
 `  <dependency>`        
 `    <groupId>com.fasterxml.jackson.core</groupId>`        
@@ -42,7 +46,10 @@ Para a correta manipulação das mensagens JSON, o projeto utiliza a biblioteca 
 - Para instalar as dependencias de fato, você deve clicar com o botão direito em seu projeto->Maven->Update Project, isso instalará as dependências.
 
 1.3 Possíveis Erros
-- Caso esteja instalando eclipse pela primeira vez, o erro "Downloading external resources is disabled. [DownloadResourceDisabled]" pode ocorrer, para consertar basta ir em Window->Preferences->Maven->Habilite os botões que dizem "donwload" e "uptade"->Apply
+- Caso esteja instalando eclipse pela primeira vez, o erro "Downloading external resources is disabled. [DownloadResourceDisabled]" pode ocorrer, para consertar basta ir em Window->Preferences->Maven->Habilite os botões que dizem "download" e "update"->Apply
+
+1.4 Recomendações
+- Utilizarem JDK a partir do 21
 
 ## 2. Como Utilizar o Validador
 
@@ -84,6 +91,7 @@ Toda mensagem trocada deve conter um campo `operacao`. Em envios de mensagem ao 
 
 **Valores possíveis para `operacao`:**
 
+* `conectar`
 * `usuario_login`
 * `usuario_logout`
 * `usuario_criar`
@@ -117,7 +125,7 @@ A seguir, a especificação detalhada para cada operação.
 
 ### 4.1. Login de Usuário (`usuario_login`)
 
-#### Envio (cliente → servidor)
+#### Envio (Cliente → Servidor)
 
 ```
 {
@@ -128,7 +136,7 @@ A seguir, a especificação detalhada para cada operação.
 
 ```
 
-#### Recebimento (servidor → cliente) em caso de sucesso
+#### Recebimento (Servidor → Cliente) em caso de sucesso
 
 ```
 {
@@ -140,7 +148,7 @@ A seguir, a especificação detalhada para cada operação.
 
 ```
 
-#### Recebimento (servidor → cliente) em caso de falha
+#### Recebimento (Servidor → Cliente) em caso de falha
 
 ```
 {
@@ -153,7 +161,7 @@ A seguir, a especificação detalhada para cada operação.
 
 ### 4.2. Logout de Usuário (`usuario_logout`)
 
-#### Envio (cliente → servidor)
+#### Envio (Cliente → Servidor)
 
 ```
 {
@@ -163,7 +171,7 @@ A seguir, a especificação detalhada para cada operação.
 
 ```
 
-#### Recebimento (servidor → cliente) em caso de sucesso
+#### Recebimento (Servidor → Cliente) em caso de sucesso
 
 ```
 {
@@ -174,7 +182,7 @@ A seguir, a especificação detalhada para cada operação.
 
 ```
 
-#### Recebimento (servidor → cliente) em caso de falha
+#### Recebimento (Servidor → Cliente) em caso de falha
 
 ```
 {
@@ -187,7 +195,7 @@ A seguir, a especificação detalhada para cada operação.
 
 ### 4.3. Criação de Usuário (`usuario_criar`)
 
-#### Envio (cliente → servidor)
+#### Envio (Cliente → Servidor)
 
 ```
 {
@@ -199,7 +207,7 @@ A seguir, a especificação detalhada para cada operação.
 
 ```
 
-#### Recebimento (servidor → cliente) em caso de sucesso
+#### Recebimento (Servidor → Cliente) em caso de sucesso
 
 ```
 {
@@ -210,7 +218,7 @@ A seguir, a especificação detalhada para cada operação.
 
 ```
 
-#### Recebimento (servidor → cliente) em caso de falha
+#### Recebimento (Servidor → Cliente) em caso de falha
 
 ```
 {
@@ -223,7 +231,7 @@ A seguir, a especificação detalhada para cada operação.
 
 ### 4.4. Leitura de Dados do Usuário (`usuario_ler`)
 
-#### Envio (cliente → servidor)
+#### Envio (Cliente → Servidor)
 
 ```
 {
@@ -233,7 +241,7 @@ A seguir, a especificação detalhada para cada operação.
 
 ```
 
-#### Recebimento (servidor → cliente) em caso de sucesso
+#### Recebimento (Servidor → Cliente) em caso de sucesso
 
 ```
 {
@@ -249,7 +257,7 @@ A seguir, a especificação detalhada para cada operação.
 
 ```
 
-#### Recebimento (servidor → cliente) em caso de falha
+#### Recebimento (Servidor → Cliente) em caso de falha
 
 ```
 {
@@ -265,7 +273,7 @@ A seguir, a especificação detalhada para cada operação.
 *Nota: Apenas os campos a serem alterados devem ser enviados. A omissão de um campo significa que ele não deve ser modificado.*<br>
 É muito importante que criem um sistema robusto que valide todas as possibilidades.
 
-#### Envio (cliente → servidor)
+#### Envio (Cliente → Servidor)
 
 ```
 {
@@ -279,7 +287,7 @@ A seguir, a especificação detalhada para cada operação.
 
 ```
 
-#### Recebimento (servidor → cliente) em caso de sucesso
+#### Recebimento (Servidor → Cliente) em caso de sucesso
 
 ```
 {
@@ -290,7 +298,7 @@ A seguir, a especificação detalhada para cada operação.
 
 ```
 
-#### Recebimento (servidor → cliente) em caso de falha
+#### Recebimento (Servidor → Cliente) em caso de falha
 
 ```
 {
@@ -303,7 +311,9 @@ A seguir, a especificação detalhada para cada operação.
 
 ### 4.6. Deleção de Usuário (`usuario_deletar`)
 
-#### Envio (cliente → servidor)
+Ao deletar um usuário com sucesso a conexão entre o servidor e cliente se mantém.
+
+#### Envio (Cliente → Servidor)
 
 ```
 {
@@ -313,7 +323,7 @@ A seguir, a especificação detalhada para cada operação.
 
 ```
 
-#### Recebimento (servidor → cliente) em caso de sucesso
+#### Recebimento (Servidor → Cliente) em caso de sucesso
 
 ```
 {
@@ -324,7 +334,7 @@ A seguir, a especificação detalhada para cada operação.
 
 ```
 
-#### Recebimento (servidor → cliente) em caso de falha
+#### Recebimento (Servidor → Cliente) em caso de falha
 
 ```
 {
@@ -344,7 +354,7 @@ Exemplo:<br>
 - O "valor" a ser armazenado será R$10,00<br>
 - O "cpf_destino" a ser armazenado será o de João<br>
 
-#### Envio (cliente → servidor)
+#### Envio (Cliente → Servidor)
 
 ```
 {
@@ -356,7 +366,7 @@ Exemplo:<br>
 
 ```
 
-#### Recebimento (servidor → cliente) em caso de sucesso
+#### Recebimento (Servidor → Cliente) em caso de sucesso
 
 ```
 {
@@ -367,7 +377,7 @@ Exemplo:<br>
 
 ```
 
-#### Recebimento (servidor → cliente) em caso de falha
+#### Recebimento (Servidor → Cliente) em caso de falha
 
 ```
 {
@@ -388,7 +398,7 @@ O servidor deve ter como limite máximo de retorno 31 dias (31 dias foi escolhid
 O Usuário pediu as transações do dia 1 de janeiro a 1 de fevereiro, é esperado que o servidor retorne todas as transações entre esse tempo<br>
 O Usuário pediu as transações do dia 1 de janeiro a 1 de maio, o servidor deve retornar um erro.
 
-#### Envio (cliente → servidor)
+#### Envio (Cliente → Servidor)
 
 ```
 {
@@ -400,7 +410,7 @@ O Usuário pediu as transações do dia 1 de janeiro a 1 de maio, o servidor dev
 
 ```
 
-#### Recebimento (servidor → cliente) em caso de sucesso
+#### Recebimento (Servidor → Cliente) em caso de sucesso
 
 ```
 {
@@ -427,7 +437,7 @@ O Usuário pediu as transações do dia 1 de janeiro a 1 de maio, o servidor dev
 
 ```
 
-#### Recebimento (servidor → cliente) em caso de falha
+#### Recebimento (Servidor → Cliente) em caso de falha
 
 ```
 {
@@ -442,7 +452,7 @@ O Usuário pediu as transações do dia 1 de janeiro a 1 de maio, o servidor dev
 Essa ação permite que o usuário deposite quantia X de dinheiro em sua conta,<br>
 O `valor_enviado` representa a quantidade que está sendo depositada.
 
-#### Envio (cliente → servidor)
+#### Envio (Cliente → Servidor)
 
 ```
 {
@@ -453,7 +463,7 @@ O `valor_enviado` representa a quantidade que está sendo depositada.
 
 ```
 
-#### Recebimento (servidor → cliente) em caso de sucesso
+#### Recebimento (Servidor → Cliente) em caso de sucesso
 
 ```
 {
@@ -464,7 +474,7 @@ O `valor_enviado` representa a quantidade que está sendo depositada.
 
 ```
 
-#### Recebimento (servidor → cliente) em caso de falha
+#### Recebimento (Servidor → Cliente) em caso de falha
 
 ```
 {
@@ -474,6 +484,45 @@ O `valor_enviado` representa a quantidade que está sendo depositada.
 }
 
 ```
+
+### 4.10. Conectar com o servidor (`conectar`)
+Essa ação permite que o usuário se conecte com o servidor e deve ser a primeira a ser chamada.
+
+Caso o usuário chame `conectar` novamente, mesmo já estando conectado, a operação deve ser bem-sucedida.
+
+#### Envio (Cliente → Servidor)
+
+```
+{
+  "operacao": "conectar"
+}
+
+```
+
+#### Recebimento (Servidor → Cliente) em caso de sucesso
+
+```
+{
+  "operacao": "conectar",
+  "status": true,
+  "info": "Servidor conectado com sucesso."
+}
+
+```
+
+#### Recebimento (Servidor → Cliente) em caso de falha
+
+ADENDO: Muito provavelmente caso o servidor se conecte com sucesso, ele nem mesmo irá retornar algo, mas apenas por padrão, iremos adicionar o "caso de erro"
+
+```
+{
+  "operacao": "conectar",
+  "status": false,
+  "info": "Erro ao se conectar."
+}
+
+```
+
 
 ## 5. Em caso de erro
 
@@ -495,34 +544,54 @@ O que isso significa? Quando o cliente receber uma operação com o `status` com
 ### 5.2. Erros de JSON
 Caso o servidor envie uma mensagem que não contenha `operacao`, `status` ou `info`, ou o cliente envie uma mensagem que não contenha `operacao`,<br>o servidor/cliente que recebe devem retornar `null` para encerrar a conexão.
 
+### 5.3 Erros na conexão
+Caso a primeira `operacao` a ser recebida não seja `conectar` um erro deve ser retornado como:
+```
+{
+  "operacao": OPERACAO_QUE_FOI_RECEBIDA,
+  "status": false,
+  "info": "Erro, para receber uma operacao, a primeira operacao deve ser 'conectar'"
+}
+
+```
+
 ## 6. Tipagem de Dados
 
 | **Campo(s)**           | **Tipo de Dado** | **Descrição**                                                                                                                                                                                   |
 | ---------------------------- | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `id`,`pagina`,`limite` | **`int`**      | Valores numéricos inteiros.                                                                                                                                                                            |
-| `valor_enviado`,`saldo`  | **`double`**   | Valores numéricos de ponto flutuante.*Nota: Para este projeto,`double`é aceitável. Em sistemas de produção, o ideal seria usar `long`para representar centavos e evitar erros de precisão.* |
+| `valor_enviado`,`saldo`  | **`double`**   | Valores numéricos de ponto flutuante com no máximo *duas* casas decimais. |
 | `cpf`, `cpf_destino` | **`String: 000.000.000-00`**   | O Validador apenas valida se o CPF está na formatação, não se é válido (espaçamentos no começo e no final são desconsiderados). |
 | `nome`,`senha`  | **`String: Min 6 e Max 120 caracteres`**   | O Validador apenas valida o tamanho, ele desconsidera espaços no começo e no fim. |
 | `data_inicial`,`data_final`| **`String: yyyy-MM-dd'T'HH:mm:ss'Z'`** | Datas devem estar no formato ISO 8601 UTC. |
 | Todos os outros campos     | **`String: Min 3 e Max 200`** | Valores de texto (espaçamentos no começo e no final são desconsiderados).                   |
 
-## 7. Explicações adicionais e avisos
+## 7. Conexão e desconexão entre cliente e servidor
+As conexões quando criadas devem se manter até o final da sessão do usuário, apenas se desconectando no final de cada sessão.
 
-### 7.1. Esperado de cada aluno.
+### 7.1. Conexão.
+- O cliente deve enviar uma operacao chamada `conectar` para o IP e a porta escolhida.
+- O servidor deve responder de acordo conforme o protocolo.
+### 7.3. Desconexão.
+- Tanto o cliente como o servidor podem se desconectar enviando `null` caso alguma operação não cumpra o protocolo e não haja alguma regra de retorno. (Ou caso apenas queira se desconectar)
+
+## 8. Explicações adicionais e avisos
+
+### 8.1. Esperado de cada aluno.
 - É esperado que o servidor retorne os dados corretamente, porém o cliente sempre deve se previnir para caso o servidor retorne um `status` como `false`,<br>
-ou até mesmo não retorne nada, mesmo que seus dados enviados estejam corretos, prever erros ou falta de respostas é de inteira responsabilidade do aluno.
+  ou até mesmo não retorne nada, mesmo que seus dados enviados estejam corretos, prever erros ou falta de respostas é de inteira responsabilidade do aluno.
 
 - É esperado que o aluno tenha lido todo o documento, erros claramente contra o protocolo serão de inteira responsabilidade do aluno.
 
 - É esperado do aluno, que caso encontre uma vulnerabilidade ou ponto importante no protocolo, ele imediatamente avise no grupo de Whatsapp da turma ou em sala.
 
-### 7.2. Pontos subentendidos.
+### 8.2. Pontos subentendidos.
 Há algumas informações que estão subentendidas sobre o projeto, o protocolo não visa em conta as regras de negócio do sistema bancário,<br>
 que por sua vez estão disponíveis [clicando aqui](https://docs.google.com/document/d/1MRiMjnu9PdJSWPyAKl4zBdkZN0iFwNujDLjRW_oP-IA/edit?tab=t.0)
 
 Todas possiblidades de conversas entre o `cliente->servidor` e `servidor->cliente` estão listadas aqui, para que sua mensagem esteja correta ela deve seguir o molde fornecido a **risca**, do contrário, estará contra o protocolo e suas orientações.
 
-### 7.3. ISO 8601
+### 8.3. ISO 8601
 **Explicação:**<br>
 Apenas será necessário transformar em String, e ler a String com funções já nativas do Java (Date)
 
@@ -541,5 +610,4 @@ Apenas será necessário transformar em String, e ler a String com funções já
   "data_inicial": "2025-08-01T00:00:00Z",
   "data_final": "2025-08-27T23:59:59Z"
 }`
-
 
