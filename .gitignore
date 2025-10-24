@@ -1,9 +1,14 @@
-# 1. Ignora todos os arquivos e pastas
-*
+# Pasta de build do Maven
+/target/
 
-# 2. Cria uma exceção para NÃO ignorar o arquivo Validator.java e o RulesEnum.java, em qualquer pasta que ele esteja
-!**/Validator.java
-!**/RulesEnum.java
+# Arquivos e pastas do IntelliJ IDEA
+/.idea/
+*.iml
 
-# 3. Cria uma exceção para manter o próprio arquivo .gitignore no repositório
-!.gitignore
+# Arquivos de banco de dados local
+# (Você não quer versionar o banco em si, apenas o código)
+*.db
+*.db-journal
+
+# Arquivos de log
+*.log
