@@ -10,6 +10,9 @@ import validator.Validator;
 import java.util.HashMap;
 import java.util.Map;
 import java.math.BigDecimal;
+import dao.TransacaoDAO;
+import java.sql.Connection;
+import java.sql.SQLException;
 
 public class ProcessadorMensagens {
     private ObjectMapper objectMapper;
@@ -66,6 +69,8 @@ public class ProcessadorMensagens {
                 return processarConexao();
             case "depositar":
                 return processarDeposito(node);
+            case "transacao_criar":
+                return processarTransacao(node);
             default:
                 return criarRespostaErro(operacao, "Operação ainda não implementada");
         }
@@ -87,6 +92,8 @@ public class ProcessadorMensagens {
                 return criarRespostaErro("usuario_deletar", "Erro ao deletar usuário.");
             case "depositar":
                 return criarRespostaErro("depositar", "Erro ao depositar.");
+            case "transacao_criar":
+                return criarRespostaErro("transacao_criar", "Erro ao criar transação.");
             default:
                 return criarRespostaErro("erro", "Erro interno do servidor");
         }
@@ -347,6 +354,92 @@ public class ProcessadorMensagens {
 
         } catch (Exception e) {
             return criarRespostaErro("usuario_deletar", "Erro ao processar dados do usuário");
+        }
+    }
+
+    private String processarTransacao(JsonNode node) {
+        try {
+            String token = node.get("token").asText();
+
+            // 1. Validar token
+            String cpfEnviador = Token.validarToken(token);
+            if (cpfEnviador == null) {
+                return criarRespostaErro("transacao_criar", "Token inválido ou expirado");
+            }
+
+            // 2. Extrair dados da transação
+            if (!node.has("valor") || !node.has("cpf_destino")) {
+                return criarRespostaErro("transacao_criar", "Campos valor e cpf_destino são obrigatórios");
+            }
+
+            double valor = node.get("valor").asDouble();
+            String cpfRecebedor = node.get("cpf_destino").asText();
+
+            // 3. Validações de negócio
+            if (valor <= 0) {
+                return criarRespostaErro("transacao_criar", "Valor da transação deve ser positivo");
+            }
+
+            if (!temMaximoDuasCasasDecimais(valor)) {
+                return criarRespostaErro("transacao_criar", "Valor deve ter no máximo 2 casas decimais");
+            }
+
+            if (cpfEnviador.equals(cpfRecebedor)) {
+                return criarRespostaErro("transacao_criar", "Não é possível enviar dinheiro para si mesmo");
+            }
+
+            UsuarioDAO usuarioDAO = new UsuarioDAO();
+
+            // 4. Verificar se remetente existe e tem saldo suficiente
+            Usuario enviador = usuarioDAO.buscarPorCpf(cpfEnviador);
+            if (enviador == null) {
+                return criarRespostaErro("transacao_criar", "Usuário enviador não encontrado");
+            }
+
+            if (enviador.getSaldo() < valor) {
+                return criarRespostaErro("transacao_criar", "Saldo insuficiente");
+            }
+
+            // 5. Verificar se destinatário existe
+            Usuario recebedor = usuarioDAO.buscarPorCpf(cpfRecebedor);
+            if (recebedor == null) {
+                return criarRespostaErro("transacao_criar", "CPF de destino não encontrado");
+            }
+
+            // 6. Executar transação (atomicidade)
+            try (Connection conn = BancoDados.getConnection()) {
+                conn.setAutoCommit(false); // Iniciar transação
+
+                // 6.1. Debitar do enviador
+                double novoSaldoEnviador = enviador.getSaldo() - valor;
+                if (!usuarioDAO.atualizarSaldo(cpfEnviador, novoSaldoEnviador)) {
+                    conn.rollback();
+                    return criarRespostaErro("transacao_criar", "Erro ao debitar valor do enviador");
+                }
+
+                // 6.2. Creditar ao recebedor
+                double novoSaldoRecebedor = recebedor.getSaldo() + valor;
+                if (!usuarioDAO.atualizarSaldo(cpfRecebedor, novoSaldoRecebedor)) {
+                    conn.rollback();
+                    return criarRespostaErro("transacao_criar", "Erro ao creditar valor ao recebedor");
+                }
+
+                // 6.3. Registrar transação
+                TransacaoDAO transacaoDAO = new TransacaoDAO();
+                if (!transacaoDAO.criarTransacao(cpfEnviador, cpfRecebedor, valor)) {
+                    conn.rollback();
+                    return criarRespostaErro("transacao_criar", "Erro ao registrar transação");
+                }
+
+                conn.commit(); // Confirmar transação
+                return criarRespostaSucesso("transacao_criar", "Transação realizada com sucesso", null);
+
+            } catch (Exception e) {
+                return criarRespostaErro("transacao_criar", "Erro ao processar transação");
+            }
+
+        } catch (Exception e) {
+            return criarRespostaErro("transacao_criar", "Erro ao processar dados da transação");
         }
     }
 
