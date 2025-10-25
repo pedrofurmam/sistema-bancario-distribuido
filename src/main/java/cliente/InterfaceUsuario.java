@@ -42,8 +42,9 @@ public class InterfaceUsuario {
             System.out.println("3. Ver meus dados");
             System.out.println("4. Atualizar dados");
             System.out.println("5. Depositar");
-            System.out.println("6. Fazer logout");
-            System.out.println("7. Deletar cadastro");
+            System.out.println("6. Enviar dinheiro");
+            System.out.println("7. Fazer logout");
+            System.out.println("8. Deletar cadastro");
             System.out.println("0. Sair");
         }
 
@@ -64,7 +65,7 @@ public class InterfaceUsuario {
                     System.out.println("Encerrando sistema...");
                     return false;
                 default:
-                    if (opcao >= 3 && opcao <= 6) {
+                    if (opcao >= 3 && opcao <= 8) {
                         System.out.println("Você precisa estar logado!");
                     } else {
                         System.out.println("Opção inválida!");
@@ -85,9 +86,12 @@ public class InterfaceUsuario {
                 fazerDeposito();
                 return true;
             case 6:
-                fazerLogout();
+                enviarDinheiro();
                 return true;
             case 7:
+                fazerLogout();
+                return true;
+            case 8:
                 deletarCadastro();
                 return true;
             case 0:
@@ -207,6 +211,30 @@ public class InterfaceUsuario {
             token = null;
         } else {
             System.out.println("Falha ao deletar usuario. Você permanece logado.");
+        }
+    }
+
+    private void enviarDinheiro() {
+        System.out.println("\n=== ENVIAR DINHEIRO ===");
+
+        System.out.print("CPF do destinatário (000.000.000-00): ");
+        String cpfDestino = scanner.nextLine().trim();
+
+        System.out.print("Valor a enviar: R$ ");
+        String valorInput = scanner.nextLine().trim();
+
+        try {
+            double valor = Double.parseDouble(valorInput);
+
+            if (valor <= 0) {
+                System.out.println("Valor deve ser positivo!");
+                return;
+            }
+
+            servicoUsuario.enviarDinheiro(token, cpfDestino, valor);
+
+        } catch (NumberFormatException e) {
+            System.out.println("Valor inválido! Digite apenas números.");
         }
     }
 

@@ -209,6 +209,44 @@ public class ServicoUsuario {
         }
     }
 
+    public boolean enviarDinheiro(String token, String cpfDestino, double valor) {
+        try {
+            Map<String, Object> dados = new HashMap<>();
+            dados.put("operacao", "transacao_criar");
+            dados.put("token", token);
+            dados.put("cpf_destino", cpfDestino);
+            dados.put("valor", valor);
+
+            ObjectMapper mapper = new ObjectMapper();
+            String json = mapper.writeValueAsString(dados);
+
+            Validator.validateClient(json);
+            String resposta = cliente.enviarMensagem(json);
+
+            ProcessadorRespostas processador = new ProcessadorRespostas();
+            boolean sucesso = processador.verificaAcao(resposta);
+
+
+
+
+
+            if (sucesso) {
+                System.out.println("Transferência realizada com sucesso!");
+            } else {
+                processador.processarResposta(resposta);
+            }
+
+            return sucesso;
+
+        } catch (IllegalArgumentException e) {
+            System.out.println("Erro de validação na tranferência: " + e.getMessage());
+            return false;
+        } catch (Exception e) {
+          System.err.println("Erro ao realizar tranferência: " + e.getMessage());
+          return false;
+        }
+    }
+
     public boolean deletarCadastro(String token){
 
         if (token == null) {
