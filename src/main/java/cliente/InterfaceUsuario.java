@@ -6,6 +6,9 @@ import cliente.ServicoUsuario;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 public class InterfaceUsuario {
     private Scanner scanner;
@@ -43,8 +46,9 @@ public class InterfaceUsuario {
             System.out.println("4. Atualizar dados");
             System.out.println("5. Depositar");
             System.out.println("6. Enviar dinheiro");
-            System.out.println("7. Fazer logout");
-            System.out.println("8. Deletar cadastro");
+            System.out.println("7. Ver extrato");
+            System.out.println("8. Fazer logout");
+            System.out.println("9. Deletar cadastro");
             System.out.println("0. Sair");
         }
 
@@ -89,9 +93,12 @@ public class InterfaceUsuario {
                 enviarDinheiro();
                 return true;
             case 7:
-                fazerLogout();
+                verTransacoes(); // Nova funcionalidade
                 return true;
             case 8:
+                fazerLogout();
+                return true;
+            case 9:
                 deletarCadastro();
                 return true;
             case 0:
@@ -235,6 +242,49 @@ public class InterfaceUsuario {
 
         } catch (NumberFormatException e) {
             System.out.println("Valor inválido! Digite apenas números.");
+        }
+    }
+
+    private void verTransacoes() {
+        System.out.println("\n=== HISTÓRICO DE TRANSAÇÕES ===");
+        System.out.println("Digite as datas no formato: dd/MM/yyyy (ex: 15/03/2025)");
+
+        System.out.print("Data inicial: ");
+        String dataInicialInput = scanner.nextLine().trim();
+
+        System.out.print("Data final: ");
+        String dataFinalInput = scanner.nextLine().trim();
+
+        try {
+            String dataInicial = formatarDataParaISO(dataInicialInput, true); // início do dia
+            String dataFinal = formatarDataParaISO(dataFinalInput, false);   // final do dia
+
+            servicoUsuario.verTransacoes(token, dataInicial, dataFinal);
+
+        } catch (Exception e) {
+            System.out.println("Formato de data inválido! Use dd/MM/yyyy (ex: 15/03/2025)");
+        }
+    }
+
+    private String formatarDataParaISO(String dataInput, boolean inicioDodia) {
+        try {
+            // Parse da data no formato dd/MM/yyyy
+            DateTimeFormatter formatoEntrada = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+            LocalDate data = LocalDate.parse(dataInput, formatoEntrada);
+
+            // Converter para LocalDateTime
+            LocalDateTime dataHora;
+            if (inicioDodia) {
+                dataHora = data.atStartOfDay(); // 00:00:00
+            } else {
+                dataHora = data.atTime(23, 59, 59); // 23:59:59
+            }
+
+            // Converter para formato ISO 8601 UTC
+            return dataHora.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME) + "Z";
+
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Data inválida: " + dataInput);
         }
     }
 

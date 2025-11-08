@@ -13,6 +13,10 @@ import java.math.BigDecimal;
 import dao.TransacaoDAO;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
+import java.util.List;
+import java.time.format.DateTimeFormatter;
 
 public class ProcessadorMensagens {
     private ObjectMapper objectMapper;
@@ -71,6 +75,8 @@ public class ProcessadorMensagens {
                 return processarDeposito(node);
             case "transacao_criar":
                 return processarTransacao(node);
+            case "transacao_ler":
+                return processarLeituraTransacoes(node);
             default:
                 return criarRespostaErro(operacao, "Operação ainda não implementada");
         }
@@ -94,6 +100,8 @@ public class ProcessadorMensagens {
                 return criarRespostaErro("depositar", "Erro ao depositar.");
             case "transacao_criar":
                 return criarRespostaErro("transacao_criar", "Erro ao criar transação.");
+            case "transacao_ler":
+                return criarRespostaErro("transacao_ler", "Erro ao ler transações.");
             default:
                 return criarRespostaErro("erro", "Erro interno do servidor");
         }
@@ -440,6 +448,80 @@ public class ProcessadorMensagens {
 
         } catch (Exception e) {
             return criarRespostaErro("transacao_criar", "Erro ao processar dados da transação");
+        }
+    }
+
+    private String processarLeituraTransacoes(JsonNode node) {
+        try {
+            String token = node.get("token").asText();
+
+            // 1. Validar token
+            String cpf = Token.validarToken(token);
+            if (cpf == null) {
+                return criarRespostaErro("transacao_ler", "Token inválido ou expirado");
+            }
+
+            // 2. Validar campos obrigatórios
+            // Verificar se os campos existem e são strings
+            if (!node.has("data_inicial") || !node.has("data_final") ||
+                    node.get("data_inicial").isNull() || node.get("data_final").isNull()) {
+                return criarRespostaErro("transacao_ler", "Datas inicial e final são obrigatórias");
+            }
+
+            String dataInicial = node.get("data_inicial").asText();
+            String dataFinal = node.get("data_final").asText();
+
+// Verificar se as strings não estão vazias
+            if (dataInicial.trim().isEmpty() || dataFinal.trim().isEmpty()) {
+                return criarRespostaErro("transacao_ler", "Datas não podem estar vazias");
+            }
+
+            // 3. Validar formato das datas e período máximo de 31 dias
+            if (!validarPeriodoDatas(dataInicial, dataFinal)) {
+                return criarRespostaErro("transacao_ler", "Período inválido. Máximo de 31 dias permitido");
+            }
+
+            // 4. Buscar transações no banco
+            TransacaoDAO transacaoDAO = new TransacaoDAO();
+            List<Map<String, Object>> transacoes = transacaoDAO.buscarTransacoesPorPeriodo(cpf, dataInicial, dataFinal);
+
+            // 5. Preparar resposta
+            Map<String, Object> extras = new HashMap<>();
+            extras.put("transacoes", transacoes);
+
+            return criarRespostaSucesso("transacao_ler", "Transações recuperadas com sucesso", extras);
+
+        } catch (Exception e) {
+            return criarRespostaErro("transacao_ler", "Erro ao buscar transações");
+        }
+    }
+
+    private boolean validarPeriodoDatas(String dataInicial, String dataFinal) {
+        try {
+            // Usar formatter mais flexível para ISO 8601
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'");
+
+            // Verificar se as strings não são nulas ou vazias
+            if (dataInicial == null || dataInicial.trim().isEmpty() ||
+                    dataFinal == null || dataFinal.trim().isEmpty()) {
+                return false;
+            }
+
+            LocalDateTime inicio = LocalDateTime.parse(dataInicial.trim(), formatter);
+            LocalDateTime fim = LocalDateTime.parse(dataFinal.trim(), formatter);
+
+            // Verificar se data inicial é anterior à final
+            if (inicio.isAfter(fim)) {
+                return false;
+            }
+
+            // Verificar se o período não excede 31 dias
+            long diasEntre = ChronoUnit.DAYS.between(inicio, fim);
+            return diasEntre <= 31;
+
+        } catch (Exception e) {
+            System.err.println("Erro ao validar datas: " + e.getMessage());
+            return false;
         }
     }
 

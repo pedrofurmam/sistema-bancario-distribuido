@@ -247,6 +247,54 @@ public class ServicoUsuario {
         }
     }
 
+    public void verTransacoes(String token, String dataInicial, String dataFinal) {
+        if (token == null) {
+            System.out.println("Você precisa estar logado!");
+            return;
+        }
+
+        try {
+            Map<String, String> dados = new HashMap<>();
+            dados.put("operacao", "transacao_ler");
+            dados.put("token", token);
+            dados.put("data_inicial", dataInicial);
+            dados.put("data_final", dataFinal);
+
+            String json = mapper.writeValueAsString(dados);
+
+            Validator.validateClient(json);
+            String resposta = cliente.enviarMensagem(json);
+
+            if (resposta != null) {
+                Validator.validateServer(resposta);
+                processador.processarTransacoes(resposta);
+            }
+
+        } catch (IllegalArgumentException e) {
+            System.out.println("Erro de validação: " + e.getMessage());
+        } catch (Exception e) {
+            System.err.println("Erro ao consultar transações: " + e.getMessage());
+        }
+    }
+
+    public void reportarErroServidor(String operacaoEnviada, String motivoErro) {
+        try {
+            Map<String, String> dados = new HashMap<>();
+            dados.put("operacao", "erro_servidor");
+            dados.put("operacao_enviada", operacaoEnviada);
+            dados.put("info", motivoErro);
+
+            ObjectMapper mapper = new ObjectMapper();
+            String json = mapper.writeValueAsString(dados);
+
+            System.out.println("Reportando erro do servidor: " + motivoErro);
+            cliente.enviarMensagem(json);
+
+        } catch (Exception e) {
+            System.err.println("Erro ao reportar erro do servidor: " + e.getMessage());
+        }
+    }
+
     public boolean deletarCadastro(String token){
 
         if (token == null) {

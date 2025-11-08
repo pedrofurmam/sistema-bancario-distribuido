@@ -7,6 +7,8 @@ import java.net.*;
 import java.util.HashMap;
 import java.util.Map;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.JsonNode;
+
 
 public class Cliente {
     private Socket socket;
@@ -76,14 +78,26 @@ public class Cliente {
             String resposta = in.readLine();
 
 
-            // Resposta recebida do servidor
             if (resposta != null) {
-
                 System.out.println("Cliente recebeu: " + resposta);
                 try {
                     Validator.validateServer(resposta);
                 } catch (Exception e) {
                     System.out.println("Resposta do servidor não segue o protocolo: " + e.getMessage());
+
+                    // Extrair operação da mensagem original para reportar
+                    try {
+                        ObjectMapper mapper = new ObjectMapper();
+                        JsonNode node = mapper.readTree(json);
+                        String operacaoEnviada = node.get("operacao").asText();
+
+                        // Reportar erro ao servidor
+                        ServicoUsuario servico = new ServicoUsuario(this);
+                        servico.reportarErroServidor(operacaoEnviada, "Resposta do servidor não segue o protocolo: " + e.getMessage());
+
+                    } catch (Exception ex) {
+                        System.err.println("Erro ao extrair operação para report: " + ex.getMessage());
+                    }
                 }
             }
 
