@@ -56,10 +56,11 @@ public class TransacaoDAO {
         try (Connection conn = BancoDados.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
+
             stmt.setString(1, cpf);
             stmt.setString(2, cpf);
-            stmt.setString(3, dataInicial);
-            stmt.setString(4, dataFinal);
+            stmt.setString(3, dataInicial.replace("Z", ""));
+            stmt.setString(4, dataFinal.replace("Z", ""));
 
             ResultSet rs = stmt.executeQuery();
 

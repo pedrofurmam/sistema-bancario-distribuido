@@ -1,5 +1,5 @@
 package autenticador;
-
+import java.net.Socket;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.UUID;
@@ -9,14 +9,17 @@ public class Token {
     // Classe interna para armazenar informações do token
     private static class TokenInfo {
         private final String cpf;
+        private final Socket socket;
         private boolean ativo;
 
-        public TokenInfo(String cpf) {
+        public TokenInfo(String cpf, Socket socket) {
             this.cpf = cpf;
+            this.socket = socket;
             this.ativo = true;
         }
 
         public String getCpf() { return cpf; }
+        public Socket getSocket() { return socket; }
         public boolean isAtivo() { return ativo; }
         public void desativar() { this.ativo = false; }
     }
@@ -27,22 +30,22 @@ public class Token {
      * Gera novo token quando usuário faz login
      * Token permanece válido até logout manual
      */
-    public static String gerarToken(String cpf) {
+    public static String gerarToken(String cpf, Socket socket) {
         // Remove tokens antigos do mesmo CPF (apenas um login por CPF)
         invalidarTokensPorCpf(cpf);
 
         String token = UUID.randomUUID().toString();
 
-        tokens.put(token, new TokenInfo(cpf));
+        tokens.put(token, new TokenInfo(cpf,socket));
 
-        System.out.println("Token gerado para " + cpf + ": " + token);
+        System.out.println("Token gerado para " + cpf + ": " + token + " (socket: " + socket.getRemoteSocketAddress() + ")");
         return token;
     }
 
     /**
      * Verifica se token é válido
      */
-    public static String validarToken(String token) {
+    public static String validarToken(String token, Socket socketAtual) {
         try {
             if (token == null || token.trim().isEmpty()) {
                 return null;
@@ -56,6 +59,14 @@ public class Token {
 
             if (!tokenInfo.isAtivo()) {
                 System.out.println("Token inativo: " + token);
+                return null;
+            }
+
+            // Verificar se o socket atual é o mesmo do login
+            if (!tokenInfo.getSocket().equals(socketAtual)) {
+                System.out.println("Tentativa de uso de token em socket diferente! Token: " + token
+                        + " Socket original: " + tokenInfo.getSocket().getRemoteSocketAddress()
+                        + " Socket atual: " + socketAtual.getRemoteSocketAddress());
                 return null;
             }
 
