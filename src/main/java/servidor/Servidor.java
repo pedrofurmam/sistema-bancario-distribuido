@@ -64,7 +64,7 @@ public class Servidor extends Thread {
         try (PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
              BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()))) {
 
-            ProcessadorMensagens processador = new ProcessadorMensagens();
+            ProcessadorMensagens processador = new ProcessadorMensagens(clientSocket);
             String inputLine;
 
             while ((inputLine = in.readLine()) != null) {

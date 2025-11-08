@@ -11,6 +11,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.math.BigDecimal;
 import dao.TransacaoDAO;
+import java.net.Socket;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
@@ -20,11 +21,17 @@ import java.time.format.DateTimeFormatter;
 
 public class ProcessadorMensagens {
     private ObjectMapper objectMapper;
+    private boolean conectado = false;
+    private Socket socket;
 
-    public ProcessadorMensagens() {
+
+    public ProcessadorMensagens(Socket socket) {
         this.objectMapper = new ObjectMapper();
+        this.socket = socket;
         BancoDados.criarTabelas();
     }
+
+
 
     public String processarMensagem(String jsonRecebido) {
         String operacao = "erro";
@@ -180,7 +187,7 @@ public class ProcessadorMensagens {
             // 1. Validar credenciais no banco
             if (dao.validarLogin(cpf, senha)) {
                 // 2. Gerar token para usuário válido
-                String token = Token.gerarToken(cpf);
+                String token = Token.gerarToken(cpf, this.socket);
 
                 // 3. Criar dados extras com token
                 Map<String, Object> extras = new HashMap<>();
@@ -201,7 +208,7 @@ public class ProcessadorMensagens {
             String token = node.get("token").asText();
 
             // 1. Validar se token é válido
-            String cpf = Token.validarToken(token);
+            String cpf = Token.validarToken(token,this.socket);
             if (cpf == null) {
                 return criarRespostaErro("usuario_logout", "Token inválido ou expirado");
             }
@@ -221,7 +228,7 @@ public class ProcessadorMensagens {
             String token = node.get("token").asText();
 
             // 1. Validar se token é válido
-            String cpf = Token.validarToken(token);
+            String cpf = Token.validarToken(token,this.socket);
             if (cpf == null) {
                 return criarRespostaErro("usuario_ler", "Token inválido ou expirado");
             }
@@ -255,7 +262,7 @@ public class ProcessadorMensagens {
             String token = node.get("token").asText();
 
             // 1. Validar se token é válido
-            String cpf = Token.validarToken(token);
+            String cpf = Token.validarToken(token,this.socket);
             if (cpf == null) {
                 return criarRespostaErro("usuario_atualizar", "Token inválido ou expirado");
             }
@@ -291,7 +298,7 @@ public class ProcessadorMensagens {
             String token = node.get("token").asText();
 
             // 1. Validar se token é válido
-            String cpf = Token.validarToken(token);
+            String cpf = Token.validarToken(token,this.socket);
             if (cpf == null) {
                 return criarRespostaErro("depositar", "Token inválido ou expirado");
             }
@@ -320,16 +327,29 @@ public class ProcessadorMensagens {
                 return criarRespostaErro("depositar", "Usuário não encontrado");
             }
 
-            // 5. Calcular novo saldo
-            double novoSaldo = usuario.getSaldo() + valorDeposito;
+            // 5. Executar depósito como transação atômica
+            try (Connection conn = BancoDados.getConnection()) {
+                conn.setAutoCommit(false); // Iniciar transação
 
-            // 6. Atualizar saldo no banco
-            boolean sucesso = dao.atualizarSaldo(cpf, novoSaldo);
+                // 5.1. Calcular e atualizar novo saldo
+                double novoSaldo = usuario.getSaldo() + valorDeposito;
+                if (!dao.atualizarSaldo(cpf, novoSaldo)) {
+                    conn.rollback();
+                    return criarRespostaErro("depositar", "Erro ao atualizar saldo");
+                }
 
-            if (sucesso) {
+                // 5.2. Registrar depósito como transação (usuário envia para si mesmo)
+                TransacaoDAO transacaoDAO = new TransacaoDAO();
+                if (!transacaoDAO.criarTransacao(cpf, cpf, valorDeposito)) {
+                    conn.rollback();
+                    return criarRespostaErro("depositar", "Erro ao registrar depósito no histórico");
+                }
+
+                conn.commit(); // Confirmar transação
                 return criarRespostaSucesso("depositar", "Deposito realizado com sucesso", null);
-            } else {
-                return criarRespostaErro("depositar", "Erro ao depositar");
+
+            } catch (Exception e) {
+                return criarRespostaErro("depositar", "Erro ao processar depósito");
             }
 
         } catch (Exception e) {
@@ -343,7 +363,7 @@ public class ProcessadorMensagens {
 
 
             // 1. Validar se token é válido
-            String cpf = Token.validarToken(token);
+            String cpf = Token.validarToken(token,this.socket);
             if (cpf == null) {
                 return criarRespostaErro("usuario_deletar", "Token inválido ou expirado");
             }
@@ -370,7 +390,7 @@ public class ProcessadorMensagens {
             String token = node.get("token").asText();
 
             // 1. Validar token
-            String cpfEnviador = Token.validarToken(token);
+            String cpfEnviador = Token.validarToken(token,this.socket);
             if (cpfEnviador == null) {
                 return criarRespostaErro("transacao_criar", "Token inválido ou expirado");
             }
@@ -456,7 +476,7 @@ public class ProcessadorMensagens {
             String token = node.get("token").asText();
 
             // 1. Validar token
-            String cpf = Token.validarToken(token);
+            String cpf = Token.validarToken(token,this.socket);
             if (cpf == null) {
                 return criarRespostaErro("transacao_ler", "Token inválido ou expirado");
             }
