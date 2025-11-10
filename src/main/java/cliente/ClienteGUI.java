@@ -39,6 +39,10 @@ public class ClienteGUI extends JFrame {
 
     public ClienteGUI() {
         this.cliente = new Cliente();
+
+        // Redirecionar console para GUI ANTES de criar o serviço
+        redirecionarConsoleParaGUI();
+
         this.servicoUsuario = new ServicoUsuario(cliente);
 
         initializeComponents();
@@ -50,8 +54,43 @@ public class ClienteGUI extends JFrame {
         setSize(800, 600);
         setLocationRelativeTo(null);
 
-        // Conectar automaticamente ao servidor
         conectarAoServidor();
+    }
+
+    private void redirecionarConsoleParaGUI() {
+        System.setOut(new PrintStream(new OutputStream() {
+            private StringBuilder buffer = new StringBuilder();
+
+            @Override
+            public void write(int b) throws IOException {
+                if (b == '\n') {
+                    String linha = buffer.toString();
+                    if (!linha.trim().isEmpty()) {
+                        adicionarLog(linha);
+                    }
+                    buffer.setLength(0);
+                } else {
+                    buffer.append((char) b);
+                }
+            }
+        }));
+
+        System.setErr(new PrintStream(new OutputStream() {
+            private StringBuilder buffer = new StringBuilder();
+
+            @Override
+            public void write(int b) throws IOException {
+                if (b == '\n') {
+                    String linha = buffer.toString();
+                    if (!linha.trim().isEmpty()) {
+                        adicionarLog("ERRO: " + linha);
+                    }
+                    buffer.setLength(0);
+                } else {
+                    buffer.append((char) b);
+                }
+            }
+        }));
     }
 
     private void initializeComponents() {
@@ -135,18 +174,18 @@ public class ClienteGUI extends JFrame {
             String senha = new String(campoSenha.getPassword()).trim();
 
             if (!cpf.isEmpty() && !senha.isEmpty()) {
-                token = servicoUsuario.fazerLogin(cpf, senha);
-                if (token != null) {
-                    adicionarLog("Login realizado com sucesso!");
-                    atualizarBotoes();
-                    cardLayout.show(painelFormulario, "VAZIO");
-                    campoCpf.setText("");
-                    campoSenha.setText("");
-                } else {
-                    adicionarLog("Falha no login!");
-                }
-            } else {
-                adicionarLog("Preencha todos os campos!");
+                new Thread(() -> {
+                    String resultado = servicoUsuario.fazerLogin(cpf, senha);
+                    SwingUtilities.invokeLater(() -> {
+                        if (resultado != null) {
+                            token = resultado;
+                            atualizarBotoes();
+                            cardLayout.show(painelFormulario, "VAZIO");
+                            campoCpf.setText("");
+                            campoSenha.setText("");
+                        }
+                    });
+                }).start();
             }
         });
 
@@ -188,16 +227,15 @@ public class ClienteGUI extends JFrame {
             String senha = new String(campoSenha.getPassword()).trim();
 
             if (!nome.isEmpty() && !cpf.isEmpty() && !senha.isEmpty()) {
-                boolean sucesso = servicoUsuario.cadastrarUsuario(nome, cpf, senha);
-                if (sucesso) {
-                    adicionarLog("Cadastro realizado com sucesso!");
-                    cardLayout.show(painelFormulario, "VAZIO");
-                    campoNome.setText("");
-                    campoCpf.setText("");
-                    campoSenha.setText("");
-                } else {
-                    adicionarLog("Falha no cadastro!");
-                }
+                new Thread(() -> {
+                    servicoUsuario.cadastrarUsuario(nome, cpf, senha);
+                    SwingUtilities.invokeLater(() -> {
+                        cardLayout.show(painelFormulario, "VAZIO");
+                        campoNome.setText("");
+                        campoCpf.setText("");
+                        campoSenha.setText("");
+                    });
+                }).start();
             } else {
                 adicionarLog("Preencha todos os campos!");
             }
@@ -229,19 +267,19 @@ public class ClienteGUI extends JFrame {
             if (!valorStr.isEmpty()) {
                 try {
                     double valor = Double.parseDouble(valorStr);
-                    boolean sucesso = servicoUsuario.depositar(token, valor);
-                    if (sucesso) {
-                        adicionarLog("Depósito realizado com sucesso!");
-                        cardLayout.show(painelFormulario, "VAZIO");
-                        campoValor.setText("");
+                    if (valor > 0) {
+                        new Thread(() -> {
+                            servicoUsuario.depositar(token, valor);
+                            SwingUtilities.invokeLater(() -> campoValor.setText(""));
+                        }).start();
                     } else {
-                        adicionarLog("Falha no depósito!");
+                        adicionarLog("Valor deve ser positivo!");
                     }
                 } catch (NumberFormatException ex) {
                     adicionarLog("Valor inválido!");
                 }
             } else {
-                adicionarLog("Informe o valor!");
+                adicionarLog("Digite um valor!");
             }
         });
 
@@ -278,14 +316,16 @@ public class ClienteGUI extends JFrame {
             if (!cpfDestino.isEmpty() && !valorStr.isEmpty()) {
                 try {
                     double valor = Double.parseDouble(valorStr);
-                    boolean sucesso = servicoUsuario.enviarDinheiro(token, cpfDestino, valor);
-                    if (sucesso) {
-                        adicionarLog("Transferência realizada com sucesso!");
-                        cardLayout.show(painelFormulario, "VAZIO");
-                        campoCpfDestino.setText("");
-                        campoValor.setText("");
+                    if (valor > 0) {
+                        new Thread(() -> {
+                            servicoUsuario.enviarDinheiro(token, cpfDestino, valor);
+                            SwingUtilities.invokeLater(() -> {
+                                campoCpfDestino.setText("");
+                                campoValor.setText("");
+                            });
+                        }).start();
                     } else {
-                        adicionarLog("Falha na transferência!");
+                        adicionarLog("Valor deve ser positivo!");
                     }
                 } catch (NumberFormatException ex) {
                     adicionarLog("Valor inválido!");
@@ -333,11 +373,13 @@ public class ClienteGUI extends JFrame {
             if (!senha.isEmpty()) dados.put("senha", senha);
 
             if (!dados.isEmpty()) {
-                servicoUsuario.atualizarDados(token, dados);
-                adicionarLog("Dados atualizados!");
-                cardLayout.show(painelFormulario, "VAZIO");
-                campoNome.setText("");
-                campoSenha.setText("");
+                new Thread(() -> {
+                    servicoUsuario.atualizarDados(token, dados);
+                    SwingUtilities.invokeLater(() -> {
+                        campoNome.setText("");
+                        campoSenha.setText("");
+                    });
+                }).start();
             } else {
                 adicionarLog("Nenhuma alteração solicitada!");
             }
@@ -374,21 +416,17 @@ public class ClienteGUI extends JFrame {
             String dataFinal = campoDataFinal.getText().trim();
 
             if (!dataInicial.isEmpty() && !dataFinal.isEmpty()) {
-                try {
-                    String dataInicialISO = formatarDataParaISO(dataInicial, true);
-                    String dataFinalISO = formatarDataParaISO(dataFinal, false);
-
-                    servicoUsuario.verTransacoes(token, dataInicialISO, dataFinalISO);
-                    adicionarLog("Consultando extrato...");
-                    cardLayout.show(painelFormulario, "VAZIO");
-                    campoDataInicial.setText("");
-                    campoDataFinal.setText("");
-
-                } catch (Exception ex) {
-                    adicionarLog("Formato de data inválido! Use dd/MM/yyyy");
-                }
+                new Thread(() -> {
+                    try {
+                        String dataInicialISO = formatarDataParaISO(dataInicial, true);
+                        String dataFinalISO = formatarDataParaISO(dataFinal, false);
+                        servicoUsuario.verTransacoes(token, dataInicialISO, dataFinalISO);
+                    } catch (Exception ex) {
+                        adicionarLog("Formato de data inválido! Use dd/MM/yyyy");
+                    }
+                }).start();
             } else {
-                adicionarLog("Preencha as datas!");
+                adicionarLog("Por favor, preencha ambas as datas");
             }
         });
 
@@ -434,78 +472,75 @@ public class ClienteGUI extends JFrame {
         painelBotoes.removeAll();
 
         if (token == null) {
-            // Usuário não logado
             JButton btnLogin = new JButton("Fazer Login");
             btnLogin.addActionListener(e -> cardLayout.show(painelFormulario, "LOGIN"));
+            painelBotoes.add(btnLogin);
 
             JButton btnCadastro = new JButton("Cadastrar");
             btnCadastro.addActionListener(e -> cardLayout.show(painelFormulario, "CADASTRO"));
-
-            painelBotoes.add(btnLogin);
             painelBotoes.add(btnCadastro);
 
         } else {
-            // Usuário logado
             JButton btnDados = new JButton("Meus Dados");
             btnDados.addActionListener(e -> {
-                servicoUsuario.verMeusDados(token);
-                adicionarLog("Consultando dados...");
+                new Thread(() -> servicoUsuario.verMeusDados(token)).start();
             });
-
-            JButton btnAtualizar = new JButton("Atualizar Dados");
-            btnAtualizar.addActionListener(e -> cardLayout.show(painelFormulario, "ATUALIZACAO"));
+            painelBotoes.add(btnDados);
 
             JButton btnDeposito = new JButton("Depositar");
             btnDeposito.addActionListener(e -> cardLayout.show(painelFormulario, "DEPOSITO"));
+            painelBotoes.add(btnDeposito);
 
             JButton btnTransferencia = new JButton("Transferir");
             btnTransferencia.addActionListener(e -> cardLayout.show(painelFormulario, "TRANSFERENCIA"));
+            painelBotoes.add(btnTransferencia);
 
             JButton btnExtrato = new JButton("Extrato");
             btnExtrato.addActionListener(e -> cardLayout.show(painelFormulario, "EXTRATO"));
+            painelBotoes.add(btnExtrato);
+
+            JButton btnAtualizar = new JButton("Atualizar Dados");
+            btnAtualizar.addActionListener(e -> cardLayout.show(painelFormulario, "ATUALIZACAO"));
+            painelBotoes.add(btnAtualizar);
 
             JButton btnLogout = new JButton("Logout");
             btnLogout.addActionListener(e -> {
-                boolean sucesso = servicoUsuario.fazerLogout(token);
-                if (sucesso) {
-                    token = null;
-                    atualizarBotoes();
-                    cardLayout.show(painelFormulario, "VAZIO");
-                    adicionarLog("Logout realizado com sucesso!");
-                } else {
-                    adicionarLog("Falha no logout!");
-                }
+                new Thread(() -> {
+                    boolean sucesso = servicoUsuario.fazerLogout(token);
+                    if (sucesso) {
+                        SwingUtilities.invokeLater(() -> {
+                            token = null;
+                            atualizarBotoes();
+                            cardLayout.show(painelFormulario, "VAZIO");
+                        });
+                    }
+                }).start();
             });
+            painelBotoes.add(btnLogout);
 
             JButton btnDeletar = new JButton("Deletar Conta");
             btnDeletar.addActionListener(e -> {
                 int confirmacao = JOptionPane.showConfirmDialog(
                         this,
-                        "Tem certeza que deseja deletar sua conta?\nEsta ação não pode ser desfeita!",
+                        "Tem certeza que deseja deletar sua conta? Esta ação não pode ser desfeita.",
                         "Confirmar Exclusão",
                         JOptionPane.YES_NO_OPTION,
                         JOptionPane.WARNING_MESSAGE
                 );
 
                 if (confirmacao == JOptionPane.YES_OPTION) {
-                    boolean sucesso = servicoUsuario.deletarCadastro(token);
-                    if (sucesso) {
-                        token = null;
-                        atualizarBotoes();
-                        cardLayout.show(painelFormulario, "VAZIO");
-                        adicionarLog("Conta deletada com sucesso!");
-                    } else {
-                        adicionarLog("Falha ao deletar conta!");
-                    }
+                    new Thread(() -> {
+                        boolean sucesso = servicoUsuario.deletarCadastro(token);
+                        if (sucesso) {
+                            SwingUtilities.invokeLater(() -> {
+                                token = null;
+                                atualizarBotoes();
+                                cardLayout.show(painelFormulario, "VAZIO");
+                            });
+                        }
+                    }).start();
                 }
             });
-
-            painelBotoes.add(btnDados);
-            painelBotoes.add(btnAtualizar);
-            painelBotoes.add(btnDeposito);
-            painelBotoes.add(btnTransferencia);
-            painelBotoes.add(btnExtrato);
-            painelBotoes.add(btnLogout);
             painelBotoes.add(btnDeletar);
         }
 
@@ -516,49 +551,33 @@ public class ClienteGUI extends JFrame {
     private void enviarMensagemManual() {
         String mensagem = campoInput.getText().trim();
         if (!mensagem.isEmpty()) {
-            try {
+            new Thread(() -> {
                 String resposta = cliente.enviarMensagem(mensagem);
-                adicionarLog("Enviado: " + mensagem);
-                if (resposta != null) {
-                    adicionarLog("Resposta: " + resposta);
-                }
-                campoInput.setText("");
-            } catch (Exception e) {
-                adicionarLog("Erro ao enviar: " + e.getMessage());
-            }
+                adicionarLog("Resposta: " + resposta);
+            }).start();
+            campoInput.setText("");
         }
     }
 
     private void conectarAoServidor() {
         SwingUtilities.invokeLater(() -> {
-            String serverIP = JOptionPane.showInputDialog(this, "IP do servidor:", "localhost");
-            String portStr = JOptionPane.showInputDialog(this, "Porta do servidor:", "12345");
-
-            if (serverIP != null && portStr != null) {
-                try {
-                    int port = Integer.parseInt(portStr);
-
-                    // Simular entrada do usuário para o método conectarComServidor
-                    System.setProperty("server.ip", serverIP);
-                    System.setProperty("server.port", portStr);
-
-                    // Executar em thread separada para não bloquear a GUI
-                    new Thread(() -> {
-                        if (cliente.conectarComServidorGUI(serverIP, port)) {
-                            SwingUtilities.invokeLater(() -> {
-                                adicionarLog("Conectado ao servidor " + serverIP + ":" + port);
-                                setTitle("Sistema Bancário - Conectado a " + serverIP + ":" + port);
-                            });
-                        } else {
-                            SwingUtilities.invokeLater(() -> {
+            String ip = JOptionPane.showInputDialog(this, "IP do servidor:", "127.0.0.1");
+            if (ip != null && !ip.trim().isEmpty()) {
+                String portaStr = JOptionPane.showInputDialog(this, "Porta do servidor:", "12345");
+                if (portaStr != null && !portaStr.trim().isEmpty()) {
+                    try {
+                        int porta = Integer.parseInt(portaStr);
+                        new Thread(() -> {
+                            boolean conectado = cliente.conectarComServidorGUI(ip, porta);
+                            if (conectado) {
+                                adicionarLog("Conectado ao servidor com sucesso!");
+                            } else {
                                 adicionarLog("Falha na conexão com o servidor!");
-                                JOptionPane.showMessageDialog(this, "Não foi possível conectar ao servidor!", "Erro de Conexão", JOptionPane.ERROR_MESSAGE);
-                            });
-                        }
-                    }).start();
-
-                } catch (NumberFormatException e) {
-                    JOptionPane.showMessageDialog(this, "Porta inválida!", "Erro", JOptionPane.ERROR_MESSAGE);
+                            }
+                        }).start();
+                    } catch (NumberFormatException e) {
+                        adicionarLog("Porta inválida!");
+                    }
                 }
             }
         });
@@ -566,7 +585,10 @@ public class ClienteGUI extends JFrame {
 
     private void adicionarLog(String mensagem) {
         SwingUtilities.invokeLater(() -> {
-            areaLog.append(mensagem + "\n");
+            String timestamp = java.time.LocalTime.now().format(
+                    java.time.format.DateTimeFormatter.ofPattern("HH:mm:ss")
+            );
+            areaLog.append("[" + timestamp + "] " + mensagem + "\n");
             areaLog.setCaretPosition(areaLog.getDocument().getLength());
         });
     }
