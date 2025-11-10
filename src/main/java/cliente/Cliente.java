@@ -109,6 +109,29 @@ public class Cliente {
         }
     }
 
+    public boolean conectarComServidorGUI(String serverIP, int serverPort) {
+        try {
+            socket = new Socket(serverIP, serverPort);
+            out = new PrintWriter(socket.getOutputStream(), true);
+            in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+
+            // Enviar operação conectar
+            Map<String, String> dados = new HashMap<>();
+            dados.put("operacao", "conectar");
+
+            ObjectMapper mapper = new ObjectMapper();
+            String json = mapper.writeValueAsString(dados);
+
+            String resposta = enviarMensagem(json);
+
+            return resposta != null && resposta.contains("\"status\":true");
+
+        } catch (Exception e) {
+            System.err.println("Erro de conexão: " + e.getMessage());
+            return false;
+        }
+    }
+
     private void fecharConexao() {
         try {
             if (out != null) out.close();
