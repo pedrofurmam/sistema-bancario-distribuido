@@ -362,8 +362,9 @@ public class ClienteGUI extends JFrame {
             JButton btnTransferir = new JButton("Transferir");
             JButton btnLogout = new JButton("Logout");
             JButton btnDeletar = new JButton("Deletar Usuário");
+            JButton btnAtualizarDados = new JButton("Atualizar Saldo");
             painelAcoes.add(btnAtualizar); painelAcoes.add(btnExtrato); painelAcoes.add(btnDepositar);
-            painelAcoes.add(btnTransferir); painelAcoes.add(btnLogout); painelAcoes.add(btnDeletar);
+            painelAcoes.add(btnTransferir);painelAcoes.add(btnAtualizarDados); painelAcoes.add(btnLogout); painelAcoes.add(btnDeletar);
             add(painelAcoes, BorderLayout.CENTER);
 
             montarPaineisDetalhes();
@@ -379,6 +380,8 @@ public class ClienteGUI extends JFrame {
             btnConfAtualizar.addActionListener(e -> doAtualizar());
             btnConfDeposito.addActionListener(e -> doDepositar());
             btnConfTransfer.addActionListener(e -> doTransferir());
+
+            btnAtualizarDados.addActionListener(e -> doAtualizarDados());
         }
 
         private void montarPaineisDetalhes() {
@@ -417,6 +420,17 @@ public class ClienteGUI extends JFrame {
             lbToken.setText(info.token);
             lbSaldo.setText(String.format("R$ %.2f", info.saldo));
             mostrarDetalhe("vazio");
+        }
+        private void doAtualizarDados() {
+            new Thread(() -> {
+                appendLog("Atualizando dados do usuário...");
+                UsuarioInfo info = carregarUsuarioAtual();
+                usuarioAtual = info; // Atualiza o estado do usuário na classe principal
+                SwingUtilities.invokeLater(() -> {
+                    preencherUsuario(info);
+                    appendLog("Dados atualizados com sucesso.");
+                });
+            }).start();
         }
 
         private void doAtualizar() {
