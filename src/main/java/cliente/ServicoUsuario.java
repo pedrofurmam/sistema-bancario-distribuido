@@ -1,10 +1,11 @@
 package cliente;
-
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import cliente.Cliente;
 import cliente.ProcessadorRespostas;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import validator.Validator;
-
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -18,6 +19,8 @@ public class ServicoUsuario {
         this.cliente = cliente;
         this.processador = new ProcessadorRespostas();
         this.mapper = new ObjectMapper();
+        // Configurar para ignorar propriedades extras
+        this.mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     }
 
     public boolean cadastrarUsuario(String nome, String cpf, String senha) {
@@ -32,7 +35,11 @@ public class ServicoUsuario {
 
             Validator.validateClient(json);
             String resposta = cliente.enviarMensagem(json);
-            Validator.validateServer(resposta);
+
+            if (resposta == null) {
+                System.out.println("Falha no cadastro devido a erro de protocolo do servidor.");
+                return false;
+            }
 
 
             return processador.verificaAcao(resposta);
@@ -55,24 +62,32 @@ public class ServicoUsuario {
             dados.put("senha", senha);
 
             String json = mapper.writeValueAsString(dados);
-            Validator.validateClient(json);
-
             String resposta = cliente.enviarMensagem(json);
 
-            Validator.validateServer(resposta);
-
-            processador.processarResposta(resposta);
-
-            if (processador.verificaAcao(resposta)) {
-                return processador.extrairToken(resposta);
+            if (resposta == null) {
+                // CORREÇÃO: Mensagem mais clara e retornar null para permitir nova tentativa
+                System.out.println("Falha no login devido a erro de protocolo do servidor. Tente novamente.");
+                return null;
             }
+
+            // Processar resposta válida
+            JsonNode node = mapper.readTree(resposta);
+            boolean sucesso = node.get("status").asBoolean();
+            String info = node.get("info").asText();
+
+            if (sucesso && node.has("token") && !node.get("token").isNull()) {
+                String token = node.get("token").asText();
+                if (token != null && !token.trim().isEmpty()) {
+                    System.out.println("Login bem-sucedido!");
+                    return token;
+                }
+            }
+
+            System.out.println("Falha no login: " + info);
             return null;
 
-        } catch (IllegalArgumentException e) {
-            System.out.println("Erro de validação: " + e.getMessage());
-            return null;
         } catch (Exception e) {
-            System.err.println("Erro ao processar login: " + e.getMessage());
+            System.out.println("Erro ao fazer login: " + e.getMessage());
             return null;
         }
     }
@@ -93,9 +108,14 @@ public class ServicoUsuario {
             Validator.validateClient(json);
             String resposta = cliente.enviarMensagem(json);
 
-            Validator.validateServer(resposta);
+            // CORREÇÃO: Se resposta for null, significa erro de protocolo
+            if (resposta == null) {
+                System.out.println("Falha ao fazer logout devido a erro de protocolo do servidor. Você permanece logado.");
+                return false;
+            }
 
-            processador.processarResposta(resposta);
+
+            //processador.processarResposta(resposta);
 
             return processador.verificaAcao(resposta);
 
@@ -125,13 +145,11 @@ public class ServicoUsuario {
             String resposta = cliente.enviarMensagem(json);
 
 
+
             if (resposta != null) {
-                Validator.validateServer(resposta);
-
-
                 processador.processarDadosUsuario(resposta);
-
-                processador.verificaAcao(resposta);
+            } else {
+                System.out.println("Falha ao consultar dados devido a erro de protocolo do servidor.");
             }
 
             return;
@@ -193,7 +211,7 @@ public class ServicoUsuario {
             String resposta = cliente.enviarMensagem(json);
 
             if (resposta != null) {
-                Validator.validateServer(resposta);
+                //Validator.validateServer(resposta);
                 processador.processarResposta(resposta);
                 return processador.verificaAcao(resposta);
             }
@@ -265,9 +283,11 @@ public class ServicoUsuario {
             Validator.validateClient(json);
             String resposta = cliente.enviarMensagem(json);
 
+
             if (resposta != null) {
-                Validator.validateServer(resposta);
                 processador.processarTransacoes(resposta);
+            } else {
+                System.out.println("Falha ao consultar transações devido a erro de protocolo do servidor.");
             }
 
         } catch (IllegalArgumentException e) {
@@ -288,10 +308,19 @@ public class ServicoUsuario {
             String json = mapper.writeValueAsString(dados);
 
             System.out.println("Reportando erro do servidor: " + motivoErro);
-            cliente.enviarMensagem(json);
+            cliente.enviarMensagemSemResposta(json);
 
         } catch (Exception e) {
             System.err.println("Erro ao reportar erro do servidor: " + e.getMessage());
+        }
+    }
+
+    private boolean respostaContemCamposObrigatorios(String resposta) {
+        try {
+            JsonNode node = mapper.readTree(resposta);
+            return node.has("operacao") && node.has("status") && node.has("info");
+        } catch (Exception e) {
+            return false;
         }
     }
 

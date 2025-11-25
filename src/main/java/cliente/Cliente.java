@@ -68,44 +68,62 @@ public class Cliente {
 
     public String enviarMensagem(String json) {
         try {
-
             Validator.validateClient(json);
-
-            //Mensagem enviada pelo cliente
             System.out.println("Cliente enviou: " + json);
-
             out.println(json);
             String resposta = in.readLine();
-
 
             if (resposta != null) {
                 System.out.println("Cliente recebeu: " + resposta);
                 try {
                     Validator.validateServer(resposta);
+                    return resposta;
                 } catch (Exception e) {
                     System.out.println("Resposta do servidor não segue o protocolo: " + e.getMessage());
 
-                    // Extrair operação da mensagem original para reportar
+                    // Reporta o erro ao servidor
                     try {
                         ObjectMapper mapper = new ObjectMapper();
-                        JsonNode node = mapper.readTree(json);
-                        String operacaoEnviada = node.get("operacao").asText();
-
-                        // Reportar erro ao servidor
-                        ServicoUsuario servico = new ServicoUsuario(this);
-                        servico.reportarErroServidor(operacaoEnviada, "Resposta do servidor não segue o protocolo: " + e.getMessage());
-
+                        JsonNode noOriginal = mapper.readTree(json);
+                        String operacaoOriginal = noOriginal.get("operacao").asText();
+                        reportarErroServidor(operacaoOriginal, e.getMessage());
                     } catch (Exception ex) {
-                        System.err.println("Erro ao extrair operação para report: " + ex.getMessage());
+                        System.err.println("Falha ao reportar erro do servidor: " + ex.getMessage());
                     }
+
+                    // Retorna null para que a camada de serviço trate o erro e o menu seja reexibido.
+                    return null;
                 }
             }
-
-            return resposta;
-
+            return null;
         } catch (Exception e) {
             System.err.println("Erro ao enviar mensagem: " + e.getMessage());
             return null;
+        }
+    }
+    private void reportarErroServidor(String operacaoEnviada, String motivoErro) {
+        try {
+            Map<String, String> dados = new HashMap<>();
+            dados.put("operacao", "erro_servidor");
+            dados.put("operacao_enviada", operacaoEnviada);
+            dados.put("info", motivoErro);
+
+            ObjectMapper mapper = new ObjectMapper();
+            String json = mapper.writeValueAsString(dados);
+
+            enviarMensagemSemResposta(json);
+
+        } catch (Exception e) {
+            System.err.println("Erro ao construir o relatório de erro do servidor: " + e.getMessage());
+        }
+    }
+    public void enviarMensagemSemResposta(String json) {
+        try {
+            // Apenas envia a mensagem para o servidor.
+            out.println(json);
+            System.out.println("Cliente (report) enviou: " + json);
+        } catch (Exception e) {
+            System.err.println("Erro ao enviar mensagem sem resposta: " + e.getMessage());
         }
     }
 

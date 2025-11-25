@@ -20,7 +20,6 @@ public class TransacaoDAO {
         try (Connection conn = BancoDados.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-            // Formato correto ISO 8601 UTC sem frações de segundo
             String timestamp = Instant.now().atZone(java.time.ZoneOffset.UTC)
                     .format(ISO_FORMATTER);
 
@@ -30,37 +29,55 @@ public class TransacaoDAO {
             stmt.setString(4, timestamp);
             stmt.setString(5, timestamp);
 
-            return stmt.executeUpdate() > 0;
+            boolean sucesso = stmt.executeUpdate() > 0;
+
+            if (sucesso) {
+                String tipo = cpfEnviador.equals(cpfRecebedor) ? "DEPÓSITO" : "TRANSFERÊNCIA";
+                System.out.printf(" %s salva: %.2f de %s para %s em %s%n",
+                        tipo, valor, cpfEnviador, cpfRecebedor, timestamp);
+            } else {
+                System.out.println(" Falha ao salvar transação");
+            }
+
+            return sucesso;
 
         } catch (Exception e) {
-            System.err.println("Erro ao criar transação: " + e.getMessage());
+            System.err.println(" Erro ao criar transação: " + e.getMessage());
+            e.printStackTrace();
             return false;
         }
     }
 
     public List<Map<String, Object>> buscarTransacoesPorPeriodo(String cpf, String dataInicial, String dataFinal) {
         String sql = """
-        SELECT t.id, t.valor_enviado, t.cpf_enviador, t.cpf_recebedor, 
-               t.criado_em, t.atualizado_em,
-               u1.nome as nome_enviador, u2.nome as nome_recebedor
-        FROM transacoes t
-        INNER JOIN usuarios u1 ON t.cpf_enviador = u1.cpf
-        INNER JOIN usuarios u2 ON t.cpf_recebedor = u2.cpf
-        WHERE (t.cpf_enviador = ? OR t.cpf_recebedor = ?)
-        AND t.criado_em >= ? AND t.criado_em <= ?
-        ORDER BY t.criado_em DESC
-        """;
+    SELECT t.id, t.valor_enviado, t.cpf_enviador, t.cpf_recebedor,
+           t.criado_em, t.atualizado_em,
+           u1.nome as nome_enviador, u2.nome as nome_recebedor
+    FROM transacoes t
+    INNER JOIN usuarios u1 ON t.cpf_enviador = u1.cpf
+    INNER JOIN usuarios u2 ON t.cpf_recebedor = u2.cpf
+    WHERE (t.cpf_enviador = ? OR t.cpf_recebedor = ?)
+    AND datetime(t.criado_em) >= datetime(?) AND datetime(t.criado_em) <= datetime(?)
+    ORDER BY t.criado_em DESC
+    """;
 
         List<Map<String, Object>> transacoes = new ArrayList<>();
 
         try (Connection conn = BancoDados.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-
             stmt.setString(1, cpf);
             stmt.setString(2, cpf);
-            stmt.setString(3, dataInicial.replace("Z", ""));
-            stmt.setString(4, dataFinal.replace("Z", ""));
+
+            // CORREÇÃO: Usar função datetime() do SQLite para comparação correta
+            String dataInicialFormatada = dataInicial.replace("Z", "").replace("T", " ");
+            String dataFinalFormatada = dataFinal.replace("Z", "").replace("T", " ");
+
+            stmt.setString(3, dataInicialFormatada);
+            stmt.setString(4, dataFinalFormatada);
+
+            System.out.printf(" Buscando transações para CPF: %s%n", cpf);
+            System.out.printf(" Período: %s até %s%n", dataInicialFormatada, dataFinalFormatada);
 
             ResultSet rs = stmt.executeQuery();
 
@@ -79,23 +96,22 @@ public class TransacaoDAO {
 
                 transacao.put("usuario_enviador", enviador);
                 transacao.put("usuario_recebedor", recebedor);
-
-                // Garantir que as datas estejam no formato correto
-                String criadoEm = rs.getString("criado_em");
-                String atualizadoEm = rs.getString("atualizado_em");
-
-                // Se as datas já estão no formato correto, usar direto
-                // Caso contrário, você pode precisar fazer parse e reformat
-                transacao.put("criado_em", formatarDataSeNecessario(criadoEm));
-                transacao.put("atualizado_em", formatarDataSeNecessario(atualizadoEm));
+                transacao.put("criado_em", formatarDataSeNecessario(rs.getString("criado_em")));
+                transacao.put("atualizado_em", formatarDataSeNecessario(rs.getString("atualizado_em")));
 
                 transacoes.add(transacao);
+
+                String tipo = rs.getString("cpf_enviador").equals(rs.getString("cpf_recebedor")) ? "DEPÓSITO" : "TRANSFERÊNCIA";
+                System.out.printf(" %s encontrado: ID=%d, Valor=%.2f, Data=%s%n",
+                        tipo, rs.getInt("id"), rs.getDouble("valor_enviado"), rs.getString("criado_em"));
             }
 
+            System.out.printf(" Total de transações encontradas: %d%n", transacoes.size());
             return transacoes;
 
         } catch (Exception e) {
-            System.err.println("Erro ao buscar transações: " + e.getMessage());
+            System.err.println(" Erro ao buscar transações: " + e.getMessage());
+            e.printStackTrace();
             return new ArrayList<>();
         }
     }

@@ -1,614 +1,568 @@
 package cliente;
-
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
-import java.io.*;
-import java.net.Socket;
+import java.io.OutputStream;
+import java.io.PrintStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class ClienteGUI extends JFrame {
-    private Cliente cliente;
-    private ServicoUsuario servicoUsuario;
-    private JTextArea areaLog;
-    private JTextField campoInput;
-    private JButton botaoEnviar;
-    private JPanel painelPrincipal;
-    private JPanel painelBotoes;
-    private String token = null;
+    // Serviços e estado de sessão
+    private final Cliente cliente;
+    private final ServicoUsuario servicoUsuario;
+    private String token;
+    private UsuarioInfo usuarioAtual;
 
-    // Componentes para formulários
-    private JPanel painelFormulario;
-    private CardLayout cardLayout;
+    // Contêiner e navegação
+    private final CardLayout cards = new CardLayout();
+    private final JPanel container = new JPanel(cards);
 
+    // Telas
+    private ConexaoPanel conexaoPanel;
+    private AutenticacaoPanel authPanel;
+    private PrincipalPanel principalPanel;
+    private ExtratoPanel extratoPanel;
+
+    // Logs compartilhados
+    private final JTextArea areaLog = new JTextArea(8, 80);
+
+    // Utilidades
+    private final ObjectMapper mapper = new ObjectMapper() {{
+        configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+    }};
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> {
-            try {
-                UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-            } catch (Exception e) {
-                e.printStackTrace();
+        // Modo headless: java -Dcliente.headless=true ...
+        boolean headless = Boolean.getBoolean("cliente.headless");
+        if (headless) {
+            Cliente cliente = new Cliente();
+            if (cliente.conectarComServidorGUI("127.0.0.1", 12345)) {
+                InterfaceUsuario cli = new InterfaceUsuario(cliente);
+                cli.iniciarMenu();
+            } else {
+                System.out.println("Falha ao conectar no modo headless.");
             }
+            return;
+        }
+
+        SwingUtilities.invokeLater(() -> {
+            try { UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName()); } catch (Exception ignored) {}
             new ClienteGUI().setVisible(true);
         });
     }
 
     public ClienteGUI() {
+        super("Sistema Bancário - Cliente GUI");
         this.cliente = new Cliente();
-
-        // Redirecionar console para GUI ANTES de criar o serviço
-        redirecionarConsoleParaGUI();
-
         this.servicoUsuario = new ServicoUsuario(cliente);
-
-        initializeComponents();
-        setupLayout();
-        setupEventListeners();
-
-        setTitle("Sistema Bancário - Interface Gráfica");
+        //this.mapper = new ObjectMapper();
+        // Configurar para ignorar propriedades extras
+        this.mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        configurarLogs();
+        montarUI();
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(800, 600);
+        setSize(980, 700);
         setLocationRelativeTo(null);
-
-        conectarAoServidor();
     }
 
-    private void redirecionarConsoleParaGUI() {
-        System.setOut(new PrintStream(new OutputStream() {
-            private StringBuilder buffer = new StringBuilder();
-
-            @Override
-            public void write(int b) throws IOException {
-                if (b == '\n') {
-                    String linha = buffer.toString();
-                    if (!linha.trim().isEmpty()) {
-                        adicionarLog(linha);
-                    }
-                    buffer.setLength(0);
-                } else {
-                    buffer.append((char) b);
-                }
-            }
-        }));
-
-        System.setErr(new PrintStream(new OutputStream() {
-            private StringBuilder buffer = new StringBuilder();
-
-            @Override
-            public void write(int b) throws IOException {
-                if (b == '\n') {
-                    String linha = buffer.toString();
-                    if (!linha.trim().isEmpty()) {
-                        adicionarLog("ERRO: " + linha);
-                    }
-                    buffer.setLength(0);
-                } else {
-                    buffer.append((char) b);
-                }
-            }
-        }));
-    }
-
-    private void initializeComponents() {
-        areaLog = new JTextArea(15, 50);
+    // Redireciona System.out/err para a área de logs
+    private void configurarLogs() {
         areaLog.setEditable(false);
         areaLog.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 12));
         areaLog.setBackground(Color.BLACK);
         areaLog.setForeground(Color.GREEN);
 
-        campoInput = new JTextField(40);
-        botaoEnviar = new JButton("Enviar");
-
-        painelPrincipal = new JPanel(new BorderLayout());
-        painelBotoes = new JPanel(new GridLayout(0, 2, 5, 5));
-
-        cardLayout = new CardLayout();
-        painelFormulario = new JPanel(cardLayout);
-
-        criarFormularios();
-        atualizarBotoes();
-    }
-
-    private void criarFormularios() {
-        // Formulário de Login
-        JPanel formLogin = criarFormularioLogin();
-        painelFormulario.add(formLogin, "LOGIN");
-
-        // Formulário de Cadastro
-        JPanel formCadastro = criarFormularioCadastro();
-        painelFormulario.add(formCadastro, "CADASTRO");
-
-        // Formulário de Depósito
-        JPanel formDeposito = criarFormularioDeposito();
-        painelFormulario.add(formDeposito, "DEPOSITO");
-
-        // Formulário de Transferência
-        JPanel formTransferencia = criarFormularioTransferencia();
-        painelFormulario.add(formTransferencia, "TRANSFERENCIA");
-
-        // Formulário de Atualização
-        JPanel formAtualizacao = criarFormularioAtualizacao();
-        painelFormulario.add(formAtualizacao, "ATUALIZACAO");
-
-        // Formulário de Extrato
-        JPanel formExtrato = criarFormularioExtrato();
-        painelFormulario.add(formExtrato, "EXTRATO");
-
-        // Panel vazio
-        JPanel painelVazio = new JPanel();
-        painelVazio.add(new JLabel("Selecione uma operação"));
-        painelFormulario.add(painelVazio, "VAZIO");
-
-        cardLayout.show(painelFormulario, "VAZIO");
-    }
-
-    private JPanel criarFormularioLogin() {
-        JPanel painel = new JPanel(new GridBagLayout());
-        GridBagConstraints gbc = new GridBagConstraints();
-
-        JTextField campoCpf = new JTextField(15);
-        JPasswordField campoSenha = new JPasswordField(15);
-        JButton botaoLogin = new JButton("Fazer Login");
-
-        gbc.insets = new Insets(5, 5, 5, 5);
-
-        gbc.gridx = 0; gbc.gridy = 0;
-        painel.add(new JLabel("CPF:"), gbc);
-        gbc.gridx = 1;
-        painel.add(campoCpf, gbc);
-
-        gbc.gridx = 0; gbc.gridy = 1;
-        painel.add(new JLabel("Senha:"), gbc);
-        gbc.gridx = 1;
-        painel.add(campoSenha, gbc);
-
-        gbc.gridx = 0; gbc.gridy = 2; gbc.gridwidth = 2;
-        painel.add(botaoLogin, gbc);
-
-        botaoLogin.addActionListener(e -> {
-            String cpf = campoCpf.getText().trim();
-            String senha = new String(campoSenha.getPassword()).trim();
-
-            if (!cpf.isEmpty() && !senha.isEmpty()) {
-                new Thread(() -> {
-                    String resultado = servicoUsuario.fazerLogin(cpf, senha);
-                    SwingUtilities.invokeLater(() -> {
-                        if (resultado != null) {
-                            token = resultado;
-                            atualizarBotoes();
-                            cardLayout.show(painelFormulario, "VAZIO");
-                            campoCpf.setText("");
-                            campoSenha.setText("");
-                        }
-                    });
-                }).start();
+        // OutputStream que acumula bytes e decodifica como UTF-8 ao encontrar \n
+        class LogOutputStream extends OutputStream {
+            private final ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+            private final String prefix;
+            LogOutputStream(String prefix) { this.prefix = prefix == null ? "" : prefix; }
+            private void flushLine() {
+                if (buffer.size() == 0) return;
+                String s = new String(buffer.toByteArray(), java.nio.charset.StandardCharsets.UTF_8);
+                buffer.reset();
+                if (!s.trim().isEmpty()) appendLog(prefix.isEmpty() ? s : (prefix + s));
             }
-        });
-
-        return painel;
-    }
-
-    private JPanel criarFormularioCadastro() {
-        JPanel painel = new JPanel(new GridBagLayout());
-        GridBagConstraints gbc = new GridBagConstraints();
-
-        JTextField campoNome = new JTextField(20);
-        JTextField campoCpf = new JTextField(15);
-        JPasswordField campoSenha = new JPasswordField(15);
-        JButton botaoCadastrar = new JButton("Cadastrar");
-
-        gbc.insets = new Insets(5, 5, 5, 5);
-
-        gbc.gridx = 0; gbc.gridy = 0;
-        painel.add(new JLabel("Nome:"), gbc);
-        gbc.gridx = 1;
-        painel.add(campoNome, gbc);
-
-        gbc.gridx = 0; gbc.gridy = 1;
-        painel.add(new JLabel("CPF:"), gbc);
-        gbc.gridx = 1;
-        painel.add(campoCpf, gbc);
-
-        gbc.gridx = 0; gbc.gridy = 2;
-        painel.add(new JLabel("Senha:"), gbc);
-        gbc.gridx = 1;
-        painel.add(campoSenha, gbc);
-
-        gbc.gridx = 0; gbc.gridy = 3; gbc.gridwidth = 2;
-        painel.add(botaoCadastrar, gbc);
-
-        botaoCadastrar.addActionListener(e -> {
-            String nome = campoNome.getText().trim();
-            String cpf = campoCpf.getText().trim();
-            String senha = new String(campoSenha.getPassword()).trim();
-
-            if (!nome.isEmpty() && !cpf.isEmpty() && !senha.isEmpty()) {
-                new Thread(() -> {
-                    servicoUsuario.cadastrarUsuario(nome, cpf, senha);
-                    SwingUtilities.invokeLater(() -> {
-                        cardLayout.show(painelFormulario, "VAZIO");
-                        campoNome.setText("");
-                        campoCpf.setText("");
-                        campoSenha.setText("");
-                    });
-                }).start();
-            } else {
-                adicionarLog("Preencha todos os campos!");
+            @Override public synchronized void write(int b) throws IOException {
+                if (b == '\n') flushLine(); else buffer.write(b);
             }
-        });
-
-        return painel;
-    }
-
-    private JPanel criarFormularioDeposito() {
-        JPanel painel = new JPanel(new GridBagLayout());
-        GridBagConstraints gbc = new GridBagConstraints();
-
-        JTextField campoValor = new JTextField(15);
-        JButton botaoDepositar = new JButton("Depositar");
-
-        gbc.insets = new Insets(5, 5, 5, 5);
-
-        gbc.gridx = 0; gbc.gridy = 0;
-        painel.add(new JLabel("Valor (R$):"), gbc);
-        gbc.gridx = 1;
-        painel.add(campoValor, gbc);
-
-        gbc.gridx = 0; gbc.gridy = 1; gbc.gridwidth = 2;
-        painel.add(botaoDepositar, gbc);
-
-        botaoDepositar.addActionListener(e -> {
-            String valorStr = campoValor.getText().trim();
-
-            if (!valorStr.isEmpty()) {
-                try {
-                    double valor = Double.parseDouble(valorStr);
-                    if (valor > 0) {
-                        new Thread(() -> {
-                            servicoUsuario.depositar(token, valor);
-                            SwingUtilities.invokeLater(() -> campoValor.setText(""));
-                        }).start();
-                    } else {
-                        adicionarLog("Valor deve ser positivo!");
-                    }
-                } catch (NumberFormatException ex) {
-                    adicionarLog("Valor inválido!");
-                }
-            } else {
-                adicionarLog("Digite um valor!");
+            @Override public synchronized void write(byte[] b, int off, int len) throws IOException {
+                for (int i = off; i < off + len; i++) write(b[i]);
             }
-        });
-
-        return painel;
-    }
-
-    private JPanel criarFormularioTransferencia() {
-        JPanel painel = new JPanel(new GridBagLayout());
-        GridBagConstraints gbc = new GridBagConstraints();
-
-        JTextField campoCpfDestino = new JTextField(15);
-        JTextField campoValor = new JTextField(15);
-        JButton botaoTransferir = new JButton("Transferir");
-
-        gbc.insets = new Insets(5, 5, 5, 5);
-
-        gbc.gridx = 0; gbc.gridy = 0;
-        painel.add(new JLabel("CPF Destino:"), gbc);
-        gbc.gridx = 1;
-        painel.add(campoCpfDestino, gbc);
-
-        gbc.gridx = 0; gbc.gridy = 1;
-        painel.add(new JLabel("Valor (R$):"), gbc);
-        gbc.gridx = 1;
-        painel.add(campoValor, gbc);
-
-        gbc.gridx = 0; gbc.gridy = 2; gbc.gridwidth = 2;
-        painel.add(botaoTransferir, gbc);
-
-        botaoTransferir.addActionListener(e -> {
-            String cpfDestino = campoCpfDestino.getText().trim();
-            String valorStr = campoValor.getText().trim();
-
-            if (!cpfDestino.isEmpty() && !valorStr.isEmpty()) {
-                try {
-                    double valor = Double.parseDouble(valorStr);
-                    if (valor > 0) {
-                        new Thread(() -> {
-                            servicoUsuario.enviarDinheiro(token, cpfDestino, valor);
-                            SwingUtilities.invokeLater(() -> {
-                                campoCpfDestino.setText("");
-                                campoValor.setText("");
-                            });
-                        }).start();
-                    } else {
-                        adicionarLog("Valor deve ser positivo!");
-                    }
-                } catch (NumberFormatException ex) {
-                    adicionarLog("Valor inválido!");
-                }
-            } else {
-                adicionarLog("Preencha todos os campos!");
-            }
-        });
-
-        return painel;
-    }
-
-    private JPanel criarFormularioAtualizacao() {
-        JPanel painel = new JPanel(new GridBagLayout());
-        GridBagConstraints gbc = new GridBagConstraints();
-
-        JTextField campoNome = new JTextField(20);
-        JPasswordField campoSenha = new JPasswordField(15);
-        JButton botaoAtualizar = new JButton("Atualizar");
-
-        gbc.insets = new Insets(5, 5, 5, 5);
-
-        gbc.gridx = 0; gbc.gridy = 0;
-        painel.add(new JLabel("Novo Nome:"), gbc);
-        gbc.gridx = 1;
-        painel.add(campoNome, gbc);
-
-        gbc.gridx = 0; gbc.gridy = 1;
-        painel.add(new JLabel("Nova Senha:"), gbc);
-        gbc.gridx = 1;
-        painel.add(campoSenha, gbc);
-
-        gbc.gridx = 0; gbc.gridy = 2; gbc.gridwidth = 2;
-        painel.add(botaoAtualizar, gbc);
-
-        gbc.gridx = 0; gbc.gridy = 3;
-        painel.add(new JLabel("(Deixe em branco para não alterar)"), gbc);
-
-        botaoAtualizar.addActionListener(e -> {
-            String nome = campoNome.getText().trim();
-            String senha = new String(campoSenha.getPassword()).trim();
-
-            Map<String, String> dados = new HashMap<>();
-            if (!nome.isEmpty()) dados.put("nome", nome);
-            if (!senha.isEmpty()) dados.put("senha", senha);
-
-            if (!dados.isEmpty()) {
-                new Thread(() -> {
-                    servicoUsuario.atualizarDados(token, dados);
-                    SwingUtilities.invokeLater(() -> {
-                        campoNome.setText("");
-                        campoSenha.setText("");
-                    });
-                }).start();
-            } else {
-                adicionarLog("Nenhuma alteração solicitada!");
-            }
-        });
-
-        return painel;
-    }
-
-    private JPanel criarFormularioExtrato() {
-        JPanel painel = new JPanel(new GridBagLayout());
-        GridBagConstraints gbc = new GridBagConstraints();
-
-        JTextField campoDataInicial = new JTextField(10);
-        JTextField campoDataFinal = new JTextField(10);
-        JButton botaoConsultar = new JButton("Consultar Extrato");
-
-        gbc.insets = new Insets(5, 5, 5, 5);
-
-        gbc.gridx = 0; gbc.gridy = 0;
-        painel.add(new JLabel("Data Inicial (dd/MM/yyyy):"), gbc);
-        gbc.gridx = 1;
-        painel.add(campoDataInicial, gbc);
-
-        gbc.gridx = 0; gbc.gridy = 1;
-        painel.add(new JLabel("Data Final (dd/MM/yyyy):"), gbc);
-        gbc.gridx = 1;
-        painel.add(campoDataFinal, gbc);
-
-        gbc.gridx = 0; gbc.gridy = 2; gbc.gridwidth = 2;
-        painel.add(botaoConsultar, gbc);
-
-        botaoConsultar.addActionListener(e -> {
-            String dataInicial = campoDataInicial.getText().trim();
-            String dataFinal = campoDataFinal.getText().trim();
-
-            if (!dataInicial.isEmpty() && !dataFinal.isEmpty()) {
-                new Thread(() -> {
-                    try {
-                        String dataInicialISO = formatarDataParaISO(dataInicial, true);
-                        String dataFinalISO = formatarDataParaISO(dataFinal, false);
-                        servicoUsuario.verTransacoes(token, dataInicialISO, dataFinalISO);
-                    } catch (Exception ex) {
-                        adicionarLog("Formato de data inválido! Use dd/MM/yyyy");
-                    }
-                }).start();
-            } else {
-                adicionarLog("Por favor, preencha ambas as datas");
-            }
-        });
-
-        return painel;
-    }
-
-    private void setupLayout() {
-        JScrollPane scrollPane = new JScrollPane(areaLog);
-        scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
-
-        JPanel painelInput = new JPanel(new BorderLayout());
-        painelInput.add(campoInput, BorderLayout.CENTER);
-        painelInput.add(botaoEnviar, BorderLayout.EAST);
-
-        JPanel painelSuperior = new JPanel(new BorderLayout());
-        painelSuperior.add(scrollPane, BorderLayout.CENTER);
-        painelSuperior.add(painelInput, BorderLayout.SOUTH);
-
-        JPanel painelInferior = new JPanel(new BorderLayout());
-        painelInferior.add(painelBotoes, BorderLayout.NORTH);
-        painelInferior.add(painelFormulario, BorderLayout.CENTER);
-
-        painelPrincipal.add(painelSuperior, BorderLayout.CENTER);
-        painelPrincipal.add(painelInferior, BorderLayout.SOUTH);
-
-        add(painelPrincipal);
-    }
-
-    private void setupEventListeners() {
-        botaoEnviar.addActionListener(e -> enviarMensagemManual());
-
-        campoInput.addKeyListener(new KeyAdapter() {
-            @Override
-            public void keyPressed(KeyEvent e) {
-                if (e.getKeyCode() == KeyEvent.VK_ENTER) {
-                    enviarMensagemManual();
-                }
-            }
-        });
-    }
-
-    private void atualizarBotoes() {
-        painelBotoes.removeAll();
-
-        if (token == null) {
-            JButton btnLogin = new JButton("Fazer Login");
-            btnLogin.addActionListener(e -> cardLayout.show(painelFormulario, "LOGIN"));
-            painelBotoes.add(btnLogin);
-
-            JButton btnCadastro = new JButton("Cadastrar");
-            btnCadastro.addActionListener(e -> cardLayout.show(painelFormulario, "CADASTRO"));
-            painelBotoes.add(btnCadastro);
-
-        } else {
-            JButton btnDados = new JButton("Meus Dados");
-            btnDados.addActionListener(e -> {
-                new Thread(() -> servicoUsuario.verMeusDados(token)).start();
-            });
-            painelBotoes.add(btnDados);
-
-            JButton btnDeposito = new JButton("Depositar");
-            btnDeposito.addActionListener(e -> cardLayout.show(painelFormulario, "DEPOSITO"));
-            painelBotoes.add(btnDeposito);
-
-            JButton btnTransferencia = new JButton("Transferir");
-            btnTransferencia.addActionListener(e -> cardLayout.show(painelFormulario, "TRANSFERENCIA"));
-            painelBotoes.add(btnTransferencia);
-
-            JButton btnExtrato = new JButton("Extrato");
-            btnExtrato.addActionListener(e -> cardLayout.show(painelFormulario, "EXTRATO"));
-            painelBotoes.add(btnExtrato);
-
-            JButton btnAtualizar = new JButton("Atualizar Dados");
-            btnAtualizar.addActionListener(e -> cardLayout.show(painelFormulario, "ATUALIZACAO"));
-            painelBotoes.add(btnAtualizar);
-
-            JButton btnLogout = new JButton("Logout");
-            btnLogout.addActionListener(e -> {
-                new Thread(() -> {
-                    boolean sucesso = servicoUsuario.fazerLogout(token);
-                    if (sucesso) {
-                        SwingUtilities.invokeLater(() -> {
-                            token = null;
-                            atualizarBotoes();
-                            cardLayout.show(painelFormulario, "VAZIO");
-                        });
-                    }
-                }).start();
-            });
-            painelBotoes.add(btnLogout);
-
-            JButton btnDeletar = new JButton("Deletar Conta");
-            btnDeletar.addActionListener(e -> {
-                int confirmacao = JOptionPane.showConfirmDialog(
-                        this,
-                        "Tem certeza que deseja deletar sua conta? Esta ação não pode ser desfeita.",
-                        "Confirmar Exclusão",
-                        JOptionPane.YES_NO_OPTION,
-                        JOptionPane.WARNING_MESSAGE
-                );
-
-                if (confirmacao == JOptionPane.YES_OPTION) {
-                    new Thread(() -> {
-                        boolean sucesso = servicoUsuario.deletarCadastro(token);
-                        if (sucesso) {
-                            SwingUtilities.invokeLater(() -> {
-                                token = null;
-                                atualizarBotoes();
-                                cardLayout.show(painelFormulario, "VAZIO");
-                            });
-                        }
-                    }).start();
-                }
-            });
-            painelBotoes.add(btnDeletar);
+            @Override public synchronized void flush() throws IOException { flushLine(); }
+            @Override public synchronized void close() throws IOException { flushLine(); }
         }
 
-        painelBotoes.revalidate();
-        painelBotoes.repaint();
-    }
-
-    private void enviarMensagemManual() {
-        String mensagem = campoInput.getText().trim();
-        if (!mensagem.isEmpty()) {
-            new Thread(() -> {
-                String resposta = cliente.enviarMensagem(mensagem);
-                adicionarLog("Resposta: " + resposta);
-            }).start();
-            campoInput.setText("");
+        try {
+            PrintStream outPs = new PrintStream(new LogOutputStream(""), true, "UTF-8");
+            PrintStream errPs = new PrintStream(new LogOutputStream("ERRO: "), true, "UTF-8");
+            System.setOut(outPs);
+            System.setErr(errPs);
+        } catch (Exception ignore) {
+            // Fallback simples caso a plataforma não suporte encoding explícito
+            System.setOut(new PrintStream(new LogOutputStream("")));
+            System.setErr(new PrintStream(new LogOutputStream("ERRO: ")));
         }
     }
 
-    private void conectarAoServidor() {
+    private void appendLog(String msg) {
         SwingUtilities.invokeLater(() -> {
-            String ip = JOptionPane.showInputDialog(this, "IP do servidor:", "127.0.0.1");
-            if (ip != null && !ip.trim().isEmpty()) {
-                String portaStr = JOptionPane.showInputDialog(this, "Porta do servidor:", "12345");
-                if (portaStr != null && !portaStr.trim().isEmpty()) {
-                    try {
-                        int porta = Integer.parseInt(portaStr);
-                        new Thread(() -> {
-                            boolean conectado = cliente.conectarComServidorGUI(ip, porta);
-                            if (conectado) {
-                                adicionarLog("Conectado ao servidor com sucesso!");
-                            } else {
-                                adicionarLog("Falha na conexão com o servidor!");
-                            }
-                        }).start();
-                    } catch (NumberFormatException e) {
-                        adicionarLog("Porta inválida!");
-                    }
-                }
-            }
-        });
-    }
-
-    private void adicionarLog(String mensagem) {
-        SwingUtilities.invokeLater(() -> {
-            String timestamp = java.time.LocalTime.now().format(
-                    java.time.format.DateTimeFormatter.ofPattern("HH:mm:ss")
-            );
-            areaLog.append("[" + timestamp + "] " + mensagem + "\n");
+            String ts = java.time.LocalTime.now().format(java.time.format.DateTimeFormatter.ofPattern("HH:mm:ss"));
+            areaLog.append("[" + ts + "] " + msg + "\n");
             areaLog.setCaretPosition(areaLog.getDocument().getLength());
         });
     }
 
-    private String formatarDataParaISO(String dataInput, boolean inicioDodia) {
+    private void montarUI() {
+        conexaoPanel = new ConexaoPanel();
+        authPanel = new AutenticacaoPanel();
+        principalPanel = new PrincipalPanel();
+        extratoPanel = new ExtratoPanel();
+
+        container.add(conexaoPanel, "conexao");
+        container.add(authPanel, "auth");
+        container.add(principalPanel, "principal");
+        container.add(extratoPanel, "extrato");
+
+        JScrollPane logScroll = new JScrollPane(areaLog);
+        logScroll.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
+        logScroll.setBorder(BorderFactory.createTitledBorder("Logs de Comunicação"));
+
+        JPanel root = new JPanel(new BorderLayout());
+        root.add(container, BorderLayout.CENTER);
+        root.add(logScroll, BorderLayout.SOUTH);
+        setContentPane(root);
+
+        cards.show(container, "conexao");
+    }
+
+    private void mostrarTela(String nome) { cards.show(container, nome); }
+
+    // Conversão de datas dd/MM/yyyy -> ISO com Z
+    private String formatarDataParaISO(String dataInput, boolean inicioDoDia) {
+        DateTimeFormatter fmtIn = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        LocalDate d = LocalDate.parse(dataInput, fmtIn);
+        LocalDateTime ldt = inicioDoDia ? d.atStartOfDay() : d.atTime(23,59,59);
+        return ldt.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME) + "Z";
+    }
+
+    // Busca dados do usuário (JSON) direto do servidor para preencher a UI
+    private UsuarioInfo carregarUsuarioAtual() {
+        if (token == null) return null;
         try {
-            java.time.format.DateTimeFormatter formatoEntrada = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy");
-            java.time.LocalDate data = java.time.LocalDate.parse(dataInput, formatoEntrada);
-
-            java.time.LocalDateTime dataHora;
-            if (inicioDodia) {
-                dataHora = data.atStartOfDay();
-            } else {
-                dataHora = data.atTime(23, 59, 59);
-            }
-
-            return dataHora.format(java.time.format.DateTimeFormatter.ISO_LOCAL_DATE_TIME) + "Z";
-
+            Map<String, String> dados = new HashMap<>();
+            dados.put("operacao", "usuario_ler");
+            dados.put("token", token);
+            String json = mapper.writeValueAsString(dados);
+            String resp = cliente.enviarMensagem(json);
+            if (resp == null) return null;
+            JsonNode root = mapper.readTree(resp);
+            if (!root.path("status").asBoolean()) return null;
+            JsonNode u = root.path("usuario");
+            UsuarioInfo info = new UsuarioInfo();
+            info.nome = u.path("nome").asText("");
+            info.cpf = u.path("cpf").asText("");
+            info.saldo = u.path("saldo").asDouble(0.0);
+            info.token = token;
+            return info;
         } catch (Exception e) {
-            throw new IllegalArgumentException("Data inválida: " + dataInput);
+            appendLog("Falha ao carregar usuário: " + e.getMessage());
+            return null;
         }
     }
+
+    // ===== Telas =====
+    // 1) Conexão ao servidor
+    private class ConexaoPanel extends JPanel {
+        private final JTextField ipField = new JTextField("127.0.0.1", 12);
+        private final JTextField portaField = new JTextField("12345", 6);
+        private final JButton btnConectar = new JButton("Conectar");
+
+        ConexaoPanel() {
+            super(new GridBagLayout());
+            GridBagConstraints gbc = new GridBagConstraints();
+            gbc.insets = new Insets(6,6,6,6);
+            gbc.anchor = GridBagConstraints.WEST;
+
+            int y = 0;
+            gbc.gridx = 0; gbc.gridy = y; add(new JLabel("IP do Servidor:"), gbc);
+            gbc.gridx = 1; add(ipField, gbc); y++;
+            gbc.gridx = 0; gbc.gridy = y; add(new JLabel("Porta:"), gbc);
+            gbc.gridx = 1; add(portaField, gbc); y++;
+            gbc.gridx = 0; gbc.gridy = y; gbc.gridwidth = 2; gbc.anchor = GridBagConstraints.CENTER; add(btnConectar, gbc);
+
+            btnConectar.addActionListener(e -> conectar());
+            KeyAdapter enter = new KeyAdapter() { @Override public void keyPressed(KeyEvent e) { if (e.getKeyCode()==KeyEvent.VK_ENTER) conectar(); } };
+            ipField.addKeyListener(enter); portaField.addKeyListener(enter);
+        }
+
+        private void conectar() {
+            String ip = ipField.getText().trim();
+            String portaStr = portaField.getText().trim();
+            if (ip.isEmpty() || portaStr.isEmpty()) { appendLog("Informe IP e Porta."); return; }
+            try {
+                int porta = Integer.parseInt(portaStr);
+                btnConectar.setEnabled(false);
+                new Thread(() -> {
+                    boolean ok = cliente.conectarComServidorGUI(ip, porta);
+                    SwingUtilities.invokeLater(() -> {
+                        btnConectar.setEnabled(true);
+                        if (ok) { appendLog("Conectado ao servidor."); mostrarTela("auth"); }
+                        else { appendLog("Falha na conexão."); JOptionPane.showMessageDialog(this, "Falha na conexão.", "Erro", JOptionPane.ERROR_MESSAGE); }
+                    });
+                }).start();
+            } catch (NumberFormatException ex) {
+                appendLog("Porta inválida.");
+            }
+        }
+    }
+
+    // 2) Autenticação (Login/Cadastro)
+    private class AutenticacaoPanel extends JPanel {
+        private final JRadioButton rbLogin = new JRadioButton("Login", true);
+        private final JRadioButton rbCadastro = new JRadioButton("Cadastrar");
+        private final JTextField cpfField = new JTextField(14);
+        private final JTextField nomeField = new JTextField(18);
+        private final JPasswordField senhaField = new JPasswordField(14);
+        private final JButton btnEnviar = new JButton("Enviar");
+
+        AutenticacaoPanel() {
+            super(new GridBagLayout());
+            GridBagConstraints gbc = new GridBagConstraints();
+            gbc.insets = new Insets(6,6,6,6);
+            gbc.fill = GridBagConstraints.HORIZONTAL;
+            gbc.anchor = GridBagConstraints.WEST;
+
+            ButtonGroup bg = new ButtonGroup(); bg.add(rbLogin); bg.add(rbCadastro);
+            JPanel modo = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
+            modo.add(new JLabel("Modo:")); modo.add(rbLogin); modo.add(rbCadastro);
+
+            int y = 0;
+            gbc.gridx=0; gbc.gridy=y; gbc.gridwidth=2; add(modo, gbc); y++;
+            gbc.gridwidth=1;
+            gbc.gridx=0; gbc.gridy=y; add(new JLabel("CPF:"), gbc);
+            gbc.gridx=1; add(cpfField, gbc); y++;
+            gbc.gridx=0; gbc.gridy=y; add(new JLabel("Nome (cadastro):"), gbc);
+            gbc.gridx=1; add(nomeField, gbc); y++;
+            gbc.gridx=0; gbc.gridy=y; add(new JLabel("Senha:"), gbc);
+            gbc.gridx=1; add(senhaField, gbc); y++;
+            gbc.gridx=0; gbc.gridy=y; gbc.gridwidth=2; gbc.anchor=GridBagConstraints.CENTER; add(btnEnviar, gbc);
+
+            nomeField.setEnabled(false);
+            rbCadastro.addActionListener(e -> nomeField.setEnabled(true));
+            rbLogin.addActionListener(e -> nomeField.setEnabled(false));
+
+            btnEnviar.addActionListener(e -> enviar());
+        }
+
+        private void enviar() {
+            String cpf = cpfField.getText().trim();
+            String nome = nomeField.getText().trim();
+            String senha = new String(senhaField.getPassword()).trim();
+            if (cpf.isEmpty() || senha.isEmpty()) {
+                appendLog("Preencha CPF e Senha.");
+                return;
+            }
+
+            btnEnviar.setEnabled(false);
+            new Thread(() -> {
+                try {
+                    if (rbCadastro.isSelected()) {
+                        boolean ok = servicoUsuario.cadastrarUsuario(nome, cpf, senha);
+                        SwingUtilities.invokeLater(() -> {
+                            appendLog(ok ? "Cadastro realizado." : "Falha no cadastro.");
+                            if (ok) {
+                                JOptionPane.showMessageDialog(this, "Cadastro OK. Faça login.", "Info", JOptionPane.INFORMATION_MESSAGE);
+                            }
+                        });
+                    } else {
+                        String tk = servicoUsuario.fazerLogin(cpf, senha);
+                        if (tk != null) {
+                            token = tk;
+                            appendLog("Login OK. Token atribuído.");
+                            UsuarioInfo info = carregarUsuarioAtual();
+                            usuarioAtual = info;
+                            SwingUtilities.invokeLater(() -> {
+                                principalPanel.preencherUsuario(info);
+                                mostrarTela("principal");
+                            });
+                        } else {
+                            SwingUtilities.invokeLater(() -> {
+                                appendLog("Falha no login.");
+                            });
+                        }
+                    }
+                } catch (Exception e) {
+                    SwingUtilities.invokeLater(() -> {
+                        appendLog("Erro durante operação: " + e.getMessage());
+                    });
+                } finally {
+                    SwingUtilities.invokeLater(() -> {
+                        btnEnviar.setEnabled(true);
+                        // Limpar campos de senha por segurança
+                        senhaField.setText("");
+                    });
+                }
+            }).start();
+        }
+    }
+
+    // 3) Tela Principal
+    private class PrincipalPanel extends JPanel {
+        private final JLabel lbNome = new JLabel("-");
+        private final JLabel lbCpf = new JLabel("-");
+        private final JLabel lbToken = new JLabel("-");
+        private final JLabel lbSaldo = new JLabel("R$ 0,00");
+
+        private final JPanel painelAcoes = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 10));
+        private final JPanel painelDetalhes = new JPanel(new CardLayout());
+
+        private final JPanel pnlAtualizar = new JPanel(new GridBagLayout());
+        private final JTextField nomeNovo = new JTextField(18);
+        private final JPasswordField senhaNova = new JPasswordField(14);
+        private final JButton btnConfAtualizar = new JButton("Confirmar Atualização");
+
+        private final JPanel pnlDeposito = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        private final JTextField valorDeposito = new JTextField(10);
+        private final JButton btnConfDeposito = new JButton("Confirmar Depósito");
+
+        private final JPanel pnlTransfer = new JPanel(new GridBagLayout());
+        private final JTextField valorTransfer = new JTextField(10);
+        private final JTextField cpfDestino = new JTextField(14);
+        private final JButton btnConfTransfer = new JButton("Confirmar Transferência");
+
+        PrincipalPanel() {
+            super(new BorderLayout());
+
+            JPanel header = new JPanel(new GridLayout(2,2,10,6));
+            header.setBorder(BorderFactory.createTitledBorder("Dados do Usuário"));
+            header.add(new JLabel("Nome:")); header.add(lbNome);
+            header.add(new JLabel("CPF:")); header.add(lbCpf);
+            JPanel header2 = new JPanel(new GridLayout(2,2,10,6));
+            header2.add(new JLabel("Token:")); header2.add(lbToken);
+            header2.add(new JLabel("Saldo:")); header2.add(lbSaldo);
+            JPanel topo = new JPanel(new GridLayout(1,2,10,6));
+            topo.add(header); topo.add(header2);
+            add(topo, BorderLayout.NORTH);
+
+            JButton btnAtualizar = new JButton("Atualizar Usuário");
+            JButton btnExtrato = new JButton("Extrato");
+            JButton btnDepositar = new JButton("Depositar");
+            JButton btnTransferir = new JButton("Transferir");
+            JButton btnLogout = new JButton("Logout");
+            JButton btnDeletar = new JButton("Deletar Usuário");
+            painelAcoes.add(btnAtualizar); painelAcoes.add(btnExtrato); painelAcoes.add(btnDepositar);
+            painelAcoes.add(btnTransferir); painelAcoes.add(btnLogout); painelAcoes.add(btnDeletar);
+            add(painelAcoes, BorderLayout.CENTER);
+
+            montarPaineisDetalhes();
+            add(painelDetalhes, BorderLayout.SOUTH);
+
+            btnAtualizar.addActionListener(e -> mostrarDetalhe("atualizar"));
+            btnDepositar.addActionListener(e -> mostrarDetalhe("depositar"));
+            btnTransferir.addActionListener(e -> mostrarDetalhe("transferir"));
+            btnExtrato.addActionListener(e -> mostrarTela("extrato"));
+            btnLogout.addActionListener(e -> doLogout());
+            btnDeletar.addActionListener(e -> doDeletar());
+
+            btnConfAtualizar.addActionListener(e -> doAtualizar());
+            btnConfDeposito.addActionListener(e -> doDepositar());
+            btnConfTransfer.addActionListener(e -> doTransferir());
+        }
+
+        private void montarPaineisDetalhes() {
+            GridBagConstraints gbc = new GridBagConstraints();
+            gbc.insets = new Insets(5,5,5,5); gbc.anchor = GridBagConstraints.WEST;
+            int y=0; gbc.gridx=0; gbc.gridy=y; pnlAtualizar.add(new JLabel("Novo Nome:"), gbc);
+            gbc.gridx=1; pnlAtualizar.add(nomeNovo, gbc); y++;
+            gbc.gridx=0; gbc.gridy=y; pnlAtualizar.add(new JLabel("Nova Senha:"), gbc);
+            gbc.gridx=1; pnlAtualizar.add(senhaNova, gbc); y++;
+            gbc.gridx=0; gbc.gridy=y; gbc.gridwidth=2; gbc.anchor=GridBagConstraints.CENTER; pnlAtualizar.add(btnConfAtualizar, gbc);
+
+            pnlDeposito.add(new JLabel("Valor:")); pnlDeposito.add(valorDeposito); pnlDeposito.add(btnConfDeposito);
+
+            GridBagConstraints gbc2 = new GridBagConstraints();
+            gbc2.insets = new Insets(5,5,5,5); gbc2.anchor = GridBagConstraints.WEST;
+            int y2=0; gbc2.gridx=0; gbc2.gridy=y2; pnlTransfer.add(new JLabel("Valor:"), gbc2);
+            gbc2.gridx=1; pnlTransfer.add(valorTransfer, gbc2); y2++;
+            gbc2.gridx=0; gbc2.gridy=y2; pnlTransfer.add(new JLabel("Destinatário (CPF):"), gbc2);
+            gbc2.gridx=1; pnlTransfer.add(cpfDestino, gbc2); y2++;
+            gbc2.gridx=0; gbc2.gridy=y2; gbc2.gridwidth=2; gbc2.anchor=GridBagConstraints.CENTER; pnlTransfer.add(btnConfTransfer, gbc2);
+
+            painelDetalhes.setBorder(BorderFactory.createTitledBorder("Ações"));
+            painelDetalhes.add(new JPanel(), "vazio");
+            painelDetalhes.add(pnlAtualizar, "atualizar");
+            painelDetalhes.add(pnlDeposito, "depositar");
+            painelDetalhes.add(pnlTransfer, "transferir");
+            mostrarDetalhe("vazio");
+        }
+
+        private void mostrarDetalhe(String nome) { ((CardLayout) painelDetalhes.getLayout()).show(painelDetalhes, nome); }
+
+        void preencherUsuario(UsuarioInfo info) {
+            if (info == null) return;
+            lbNome.setText(info.nome);
+            lbCpf.setText(info.cpf);
+            lbToken.setText(info.token);
+            lbSaldo.setText(String.format("R$ %.2f", info.saldo));
+            mostrarDetalhe("vazio");
+        }
+
+        private void doAtualizar() {
+            String n = nomeNovo.getText().trim();
+            String s = new String(senhaNova.getPassword()).trim();
+            if (n.isEmpty() && s.isEmpty()) { appendLog("Nenhuma alteração."); return; }
+            Map<String,String> dados = new HashMap<>();
+            if (!n.isEmpty()) dados.put("nome", n);
+            if (!s.isEmpty()) dados.put("senha", s);
+            new Thread(() -> {
+                servicoUsuario.atualizarDados(token, dados);
+                UsuarioInfo info = carregarUsuarioAtual(); usuarioAtual = info;
+                SwingUtilities.invokeLater(() -> preencherUsuario(info));
+            }).start();
+        }
+
+        private void doDepositar() {
+            String v = valorDeposito.getText().trim();
+            try {
+                double val = Double.parseDouble(v);
+                if (val <= 0) { appendLog("Valor deve ser positivo."); return; }
+                new Thread(() -> {
+                    boolean ok = servicoUsuario.depositar(token, val);
+                    appendLog(ok ? "Depósito OK." : "Depósito falhou.");
+                    UsuarioInfo info = carregarUsuarioAtual(); usuarioAtual = info;
+                    SwingUtilities.invokeLater(() -> preencherUsuario(info));
+                }).start();
+            } catch (NumberFormatException ex) { appendLog("Valor inválido."); }
+        }
+
+        private void doTransferir() {
+            String v = valorTransfer.getText().trim();
+            String cpf = cpfDestino.getText().trim();
+            try {
+                double val = Double.parseDouble(v);
+                if (val <= 0 || cpf.isEmpty()) { appendLog("Informe valor e CPF destino."); return; }
+                new Thread(() -> {
+                    boolean ok = servicoUsuario.enviarDinheiro(token, cpf, val);
+                    appendLog(ok ? "Transferência OK." : "Transferência falhou.");
+                    UsuarioInfo info = carregarUsuarioAtual(); usuarioAtual = info;
+                    SwingUtilities.invokeLater(() -> preencherUsuario(info));
+                }).start();
+            } catch (NumberFormatException ex) { appendLog("Valor inválido."); }
+        }
+
+        private void doLogout() {
+            new Thread(() -> {
+                boolean ok = servicoUsuario.fazerLogout(token);
+                if (ok) { token = null; usuarioAtual = null; }
+                SwingUtilities.invokeLater(() -> { appendLog(ok ? "Logout OK." : "Logout falhou."); mostrarTela("auth"); });
+            }).start();
+        }
+
+        private void doDeletar() {
+            int c = JOptionPane.showConfirmDialog(this, "Tem certeza que deseja deletar o usuário?", "Confirmar", JOptionPane.YES_NO_OPTION);
+            if (c != JOptionPane.YES_OPTION) return;
+            new Thread(() -> {
+                boolean ok = servicoUsuario.deletarCadastro(token);
+                if (ok) { token = null; usuarioAtual = null; }
+                SwingUtilities.invokeLater(() -> { appendLog(ok ? "Usuário deletado." : "Falha ao deletar."); mostrarTela("auth"); });
+            }).start();
+        }
+    }
+
+    // 4) Extrato de transações
+    private class ExtratoPanel extends JPanel {
+        private final JTextField dtIni = new JTextField(10);
+        private final JTextField dtFim = new JTextField(10);
+        private final JButton btnBuscar = new JButton("Buscar");
+        private final JButton btnVoltar = new JButton("Voltar");
+        private final JTable tabela = new JTable();
+
+        ExtratoPanel() {
+            super(new BorderLayout());
+
+            JPanel topo = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 10));
+            topo.setBorder(BorderFactory.createTitledBorder("Período"));
+            topo.add(new JLabel("De (dd/MM/yyyy):")); topo.add(dtIni);
+            topo.add(new JLabel("Até (dd/MM/yyyy):")); topo.add(dtFim);
+            topo.add(btnBuscar); topo.add(btnVoltar);
+            add(topo, BorderLayout.NORTH);
+
+            JScrollPane sp = new JScrollPane(tabela);
+            tabela.setFillsViewportHeight(true);
+            add(sp, BorderLayout.CENTER);
+
+            LocalDate hoje = LocalDate.now();
+            dtFim.setText(hoje.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
+            dtIni.setText(hoje.minusDays(7).format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
+
+            btnBuscar.addActionListener(e -> buscar());
+            btnVoltar.addActionListener(e -> mostrarTela("principal"));
+        }
+
+        private void buscar() {
+            if (token == null) { appendLog("Faça login para ver extrato."); return; }
+            String ini = dtIni.getText().trim();
+            String fim = dtFim.getText().trim();
+            try {
+                String dataInicial = formatarDataParaISO(ini, true);
+                String dataFinal = formatarDataParaISO(fim, false);
+                new Thread(() -> {
+                    DefaultTableModel model = carregarTransacoes(dataInicial, dataFinal);
+                    SwingUtilities.invokeLater(() -> tabela.setModel(model));
+                }).start();
+            } catch (Exception ex) {
+                appendLog("Datas inválidas. Use dd/MM/yyyy.");
+            }
+        }
+
+        private DefaultTableModel carregarTransacoes(String dataInicial, String dataFinal) {
+            String[] cols = {"Data", "Tipo", "Valor", "Usuário"};
+            DefaultTableModel model = new DefaultTableModel(cols, 0) { @Override public boolean isCellEditable(int r,int c){return false;} };
+            try {
+                Map<String,String> dados = new HashMap<>();
+                dados.put("operacao", "transacao_ler");
+                dados.put("token", token);
+                dados.put("data_inicial", dataInicial);
+                dados.put("data_final", dataFinal);
+                String json = mapper.writeValueAsString(dados);
+                String resp = cliente.enviarMensagem(json);
+                if (resp == null) return model;
+                JsonNode root = mapper.readTree(resp);
+                if (!root.path("status").asBoolean()) return model;
+                JsonNode arr = root.path("transacoes");
+                String meuCpf = usuarioAtual != null ? usuarioAtual.cpf : "";
+                for (JsonNode t : arr) {
+                    String data = t.path("criado_em").asText("");
+                    double valor = t.path("valor_enviado").asDouble(0.0);
+                    JsonNode enviador = t.path("usuario_enviador");
+                    JsonNode recebedor = t.path("usuario_recebedor");
+                    String cpfEnv = enviador.path("cpf").asText("");
+                    String cpfRec = recebedor.path("cpf").asText("");
+                    boolean souEnv = cpfEnv.equals(meuCpf);
+                    String tipo = souEnv ? "Enviado" : "Recebido";
+                    String contraparte = souEnv ? recebedor.path("nome").asText("") + " ("+cpfRec+")" : enviador.path("nome").asText("") + " ("+cpfEnv+")";
+                    model.addRow(new Object[]{data, tipo, String.format("R$ %.2f", valor), contraparte});
+                }
+            } catch (Exception e) {
+                appendLog("Falha ao carregar transações: " + e.getMessage());
+            }
+            return model;
+        }
+    }
+
+    // DTO simples
+    private static class UsuarioInfo { String nome; String cpf; String token; double saldo; }
 }
+

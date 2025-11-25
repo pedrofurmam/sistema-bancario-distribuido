@@ -1,5 +1,5 @@
 package cliente;
-
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -8,6 +8,8 @@ public class ProcessadorRespostas {
 
     public ProcessadorRespostas() {
         this.objectMapper = new ObjectMapper();
+        // Configurar para ignorar propriedades extras
+        this.objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     }
 
     public void processarResposta(String resposta) {

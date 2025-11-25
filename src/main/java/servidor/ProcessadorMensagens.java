@@ -39,8 +39,12 @@ public class ProcessadorMensagens {
         try {
             // Parse inicial para extrair operação
             JsonNode node = objectMapper.readTree(jsonRecebido);
-            operacao = node.has("operacao") ? node.get("operacao").asText() : "erro";
+            // Verificar se campo operacao existe
+            if (!node.has("operacao")) {
+                return null; // Retorna null para encerrar conexão
+            }
 
+            operacao = node.get("operacao").asText();
             // Validar com Validator
             Validator.validateClient(jsonRecebido);
 

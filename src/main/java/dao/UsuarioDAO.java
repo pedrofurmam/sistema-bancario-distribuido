@@ -160,15 +160,22 @@ public class UsuarioDAO {
         }
     }
 
-    public boolean deletar(String cpf){
+    public boolean deletar(String cpf) {
         String sql = "DELETE FROM usuarios WHERE cpf = ?";
+
         try (Connection conn = BancoDados.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setString(1, cpf);
-            int linhasAfetadas = stmt.executeUpdate();
+            int usuariosDeletados = stmt.executeUpdate();
 
-            return linhasAfetadas > 0; // Retorna true se deletou pelo menos 1 linha
+            if (usuariosDeletados > 0) {
+                System.out.println("Usuário deletado com sucesso (transações removidas automaticamente)");
+                return true;
+            } else {
+                System.out.println("Usuário não encontrado");
+                return false;
+            }
 
         } catch (Exception e) {
             System.err.println("Erro ao deletar usuário: " + e.getMessage());

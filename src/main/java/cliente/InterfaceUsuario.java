@@ -138,7 +138,17 @@ public class InterfaceUsuario {
         System.out.print("Senha: ");
         String senha = scanner.nextLine().trim();
 
+
         token = servicoUsuario.fazerLogin(cpf, senha);
+        if (token != null) {
+            System.out.println("Login realizado com sucesso! Redirecionando para o menu...");
+            // Adicionar uma pequena pausa para o usuário ver a mensagem
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }
     }
 
     private void atualizarDados() {
@@ -186,8 +196,11 @@ public class InterfaceUsuario {
         boolean sucesso = servicoUsuario.fazerLogout(token);
         if (sucesso) {
             token = null;
+            System.out.println("Logout realizado com sucesso!");
         } else {
-            System.out.println("Falha ao fazer logout. Você permanece logado.");
+            // CORREÇÃO: Limpar token mesmo em caso de erro de protocolo
+            token = null;
+            System.out.println("Falha ao fazer logout. Você foi desconectado.");
         }
     }
 

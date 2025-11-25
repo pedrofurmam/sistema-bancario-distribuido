@@ -1,7 +1,7 @@
 package servidor;
 
 import validator.Validator;
-
+import database.BancoDados;
 import java.net.*;
 import java.io.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -14,6 +14,9 @@ public class Servidor extends Thread {
     protected Socket clientSocket;
 
     public static void main(String[] args) throws IOException {
+
+        // Inicializar banco de dados
+        BancoDados.criarTabelas();
         ServerSocket serverSocket = null;
 
         System.out.println("Qual porta o servidor deve usar? ");
@@ -74,6 +77,15 @@ public class Servidor extends Thread {
                     // Validar mensagem do cliente
                     //Validator.validateClient(inputLine);
                     String resposta = processador.processarMensagem(inputLine);
+
+                    // Se resposta for null, encerrar conexão
+                    if (resposta == null) {
+                        System.out.println("Cliente enviou mensagem sem operacao. Encerrando conexão.");
+                        break;
+                    }
+
+
+
                     System.out.println("Servidor enviou: " + resposta);
                     out.println(resposta);
 
