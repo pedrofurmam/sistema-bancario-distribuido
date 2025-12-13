@@ -8,7 +8,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.JsonNode;
 import validator.Validator;
 import java.util.HashMap;
-
+//final
 public class Servidor extends Thread {
 
     protected Socket clientSocket;

@@ -17,7 +17,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
-
+//final
 public class ClienteGUI extends JFrame {
     // Serviços e estado de sessão
     private final Cliente cliente;
